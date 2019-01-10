@@ -81,15 +81,53 @@ public class Mapping {
 
         arr.sort(Comparator.naturalOrder());
 
-        int b = 1;
-        for (int e = 1, l = arr.size(); e <= l; e++) {
-            if (e == l || arr.get(e + 1).t != arr.get(e).t || arr.get(e + 1).r != arr.get(e).r) {
-                //TODO
+        int b = 0;
+        for (int e = 0, l = arr.size(); e < l; e++) {
+            if (e == l - 1 || arr.get(e + 1).t != arr.get(e).t || arr.get(e + 1).r != arr.get(e).r ||
+                    arr.get(e + 1).c - arr.get(e).c >= eps) {
+                MapData[] C = longestIncreasingSubsequence(arr.subList(b, e + 1));
+
+                System.out.println(Arrays.toString(C));
+                b = e + 1;
             }
         }
     }
 
+    public static MapData[] longestIncreasingSubsequence(List<MapData> eAway) {
+        int[] P = new int[eAway.size()];
+        int[] M = new int[eAway.size() + 1];
 
+        int L = 0;
+        for (int i = 0; i < eAway.size(); i++) {
+            int lo = 1, hi = L;
+
+            while (lo <= hi) {
+                int mid = (int) Math.ceil((lo + hi) / 2.);
+                if (eAway.get(M[mid]).c < eAway.get(i).c) {
+                    lo = mid + 1;
+                } else {
+                    hi = mid - 1;
+                }
+            }
+
+            int newL = lo;
+            P[i] = M[newL - 1];
+            M[newL] = i;
+
+            if (newL > L) {
+                L = newL;
+            }
+        }
+
+        MapData[] S = new MapData[L];
+        int k = M[L];
+        for (int i = L - 1; i >= 0; i--) {
+            S[i] = eAway.get(k);
+            k = P[k];
+        }
+
+        return S;
+    }
 
     public static long invertibleHash(long x) {
         x = (~x) + (x << 21);
@@ -153,6 +191,11 @@ public class Mapping {
             if (this.c > other.c) return 1;
 
             return Integer.compare(this.i, other.i);
+        }
+
+        @Override
+        public String toString() {
+            return "(" + t + ", " + r + ", " + c + ", " + i + ")";
         }
     }
 }
