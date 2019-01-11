@@ -10,7 +10,7 @@ public class Mapping {
 
         Map<Integer, Utils.Pair<Long, Long>> cache = new HashMap<>();
 
-        for (int i = 0, end = s.length() - w - k + 1; i <= end; i++) {
+        for (int i = 0, end = s.length() - w - k + 1; i < end; i++) {
             long m = Long.MAX_VALUE;
 
 
@@ -131,11 +131,11 @@ public class Mapping {
 
     public static long invertibleHash(long x) {
         x = (~x) + (x << 21);
-        x = x ^ (x >> 24);
+        x = x ^ (x >>> 24);
         x = (x + (x << 3)) + (x << 8);
-        x = x ^ (x >> 14);
+        x = x ^ (x >>> 14);
         x = (x + (x << 2)) + (x << 4);
-        x = x ^ (x >> 28);
+        x = x ^ (x >>> 28);
         x = x + (x << 31);
 
         return x;
