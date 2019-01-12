@@ -8,12 +8,13 @@ public class Mapping {
     public static Set<Minimizer> minimizerSketch(String s, int w, int k) {
         Set<Minimizer> minimizers = new HashSet<>();
 
-        Map<Integer, Utils.Pair<Long, Long>> cache = new HashMap<>();
+        long mask = (1L << (2*k)) - 1;
 
         for (int i = 0, end = s.length() - w - k + 1; i < end; i++) {
             long m = Long.MAX_VALUE;
 
 
+            Map<Integer, Utils.Pair<Long, Long>> cache = new HashMap<>();
             for (int j = 0; j < w; j++) {
                 int start = i + j;
                 var pair = kmerToLongs(s.substring(start, start + k));
@@ -129,14 +130,14 @@ public class Mapping {
         return S;
     }
 
-    public static long invertibleHash(long x) {
-        x = (~x) + (x << 21);
+    public static long invertibleHash(long x, long mask) {
+        x = ((~x) + (x << 21)) & mask;
         x = x ^ (x >>> 24);
-        x = (x + (x << 3)) + (x << 8);
+        x = ((x + (x << 3)) + (x << 8)) & mask;
         x = x ^ (x >>> 14);
-        x = (x + (x << 2)) + (x << 4);
+        x = ((x + (x << 2)) + (x << 4)) & mask;
         x = x ^ (x >>> 28);
-        x = x + (x << 31);
+        x = (x + (x << 31)) & mask;
 
         return x;
     }
