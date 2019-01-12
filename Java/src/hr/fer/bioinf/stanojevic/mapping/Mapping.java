@@ -2,31 +2,34 @@ package hr.fer.bioinf.stanojevic.mapping;
 
 import hr.fer.bioinf.stanojevic.Utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Mapping {
     public static Set<Minimizer> minimizerSketch(String s, int w, int k) {
         Set<Minimizer> minimizers = new HashSet<>();
-
         long mask = (1L << (2*k)) - 1;
 
-        for (int i = 0, end = s.length() - w - k + 1; i < end; i++) {
+        for (int i = 0, end = s.length() - w - k + 1; i <= end; i++) {
             long m = Long.MAX_VALUE;
-
 
             Map<Integer, Utils.Pair<Long, Long>> cache = new HashMap<>();
             for (int j = 0; j < w; j++) {
                 int start = i + j;
                 var pair = kmerToLongs(s.substring(start, start + k));
 
-                long u = invertibleHash(pair.first);
-                long v = invertibleHash(pair.second);
+                long u = invertibleHash(pair.first, mask);
+                long v = invertibleHash(pair.second, mask);
 
                 cache.put(start, new Utils.Pair<>(u, v));
 
-                if (u != v) {
-                    long tempMin = Long.compareUnsigned(u, v) < 0 ? u : v;
-                    m = Long.compareUnsigned(m, tempMin) < 0 ? m : tempMin;
+                if (!pair.first.equals(pair.second)) {
+                    if (Long.compareUnsigned(pair.first, pair.second) < 0)
+                        m = Long.compareUnsigned(m, u) < 0 ? m : u;
+                    else
+                        m = Long.compareUnsigned(m, v) < 0 ? m : v;
                 }
             }
 
@@ -37,9 +40,9 @@ public class Mapping {
                 long u = pair.first;
                 long v = pair.second;
 
-                if (Long.compareUnsigned(u, v) < 0 && u == m) {
+                if (u == m) {
                     minimizers.add(new Minimizer(m, start, 0));
-                } else if (Long.compareUnsigned(v, u) < 0 && v == m) {
+                } else if (v == m) {
                     minimizers.add(new Minimizer(m, start, 1));
                 }
             }
@@ -84,7 +87,9 @@ public class Mapping {
 
         int b = 0;
         for (int e = 0, l = arr.size(); e < l; e++) {
-            if (e == l - 1 || arr.get(e + 1).t != arr.get(e).t || arr.get(e + 1).r != arr.get(e).r ||
+            if (e == l - 1 ||
+                    arr.get(e + 1).t != arr.get(e).t ||
+                    arr.get(e + 1).r != arr.get(e).r ||
                     arr.get(e + 1).c - arr.get(e).c >= eps) {
                 MapData[] C = longestIncreasingSubsequence(arr.subList(b, e + 1));
 
