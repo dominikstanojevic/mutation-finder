@@ -1,7 +1,7 @@
 CFLAGS=		-g -w -O2
 PROG=		mutation_finder
 LIBS=		-lm -lz -lpthread
-OBJS=       utils.o sketch.o
+OBJS=       utils.o sketch.o map.o
 
 all:main.cpp $(OBJS)
 	g++ $(CFLAGS) main.cpp -o $(PROG) $(OBJS)
@@ -16,5 +16,9 @@ utils:utils.cpp utils.h
 sketch:sketch.cpp sketch.h
 	g++ $(CFLAGS) -c sketch.cpp
 
+map:map.cpp map.h
+	g++ $(CFLAGS) -c map.cpp
+
 utils.o: utils.h
 sketch.o: sketch.h
+map.o: map.h

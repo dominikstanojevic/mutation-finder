@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "sketch.h"
+#include "map.h"
 
 using namespace std;
 
@@ -25,9 +26,11 @@ int main(int argc, char *argv[]){
     vector<string> v_reads;
     ReadFASTAFile(f_reads, v_reads);
 
-    set<minimizer> minimizers = MinimizerSketch(genome, 10, 15);
+    vector<minimizer> minimizers = MinimizerSketch(genome, 10, 15);
 
     cout << minimizers.size() << endl;
 
+    auto table = Index(&genome, 1, 10, 15);
+    Map(table, v_reads[0], 10, 15, 500);
     return 0;
 }

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstring>
-#include <set>
+#include <vector>
 
 #include "utils.h"
 
@@ -25,8 +25,8 @@ int ComplementBase(int base){
     return 3 - base;
 }
 
-set<minimizer> MinimizerSketch(string s, int w, int k){
-    set<minimizer> minimizers;
+vector<minimizer> MinimizerSketch(string &s, int w, int k){
+    vector<minimizer> minimizers;
     int len = s.size();
 
     uint64_t mask = (1ULL << (2*k)) - 1;
@@ -57,13 +57,13 @@ set<minimizer> MinimizerSketch(string s, int w, int k){
 
         if (tmp_min.hash <= min.hash){
             if (min.end_position >= k){
-                minimizers.insert(min);
+                minimizers.push_back(min);
             }
             min = tmp_min;
             min_index = window_index;
         } else if (window_index == min_index){
             if (min.end_position >= k){
-                minimizers.insert(min);
+                minimizers.push_back(min);
             }
 
             min.hash = UINT64_MAX;
@@ -82,7 +82,7 @@ set<minimizer> MinimizerSketch(string s, int w, int k){
     }
 
     if (min.hash < UINT64_MAX){
-        minimizers.insert(min);
+        minimizers.push_back(min);
     }
 
     free(window);
