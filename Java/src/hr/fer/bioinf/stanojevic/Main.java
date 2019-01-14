@@ -1,10 +1,8 @@
 package hr.fer.bioinf.stanojevic;
 
-import hr.fer.bioinf.stanojevic.mapping.Mapping;
+import hr.fer.bioinf.stanojevic.alignment.Alignment;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class Main {
 
@@ -16,10 +14,10 @@ public class Main {
     public static final int EPS = 500;
 
     public static void main(String[] args) throws IOException {
-        String ref = String.join("", Files.readAllLines(Paths.get(REF_PATH)));
-        String query = String.join("", Files.readAllLines(Paths.get(Q_PATH)));
+        String s = "ACTCCCCCATTT";
+        String t = "GGGCCCGAT";
 
-        var table = Mapping.index(new String[]{ref}, W,K);
-        Mapping.map(table, query, W, K, EPS);
+        var pair = Alignment.align(s, t);
+        System.out.println(pair.first + " " + pair.second);
     }
 }
