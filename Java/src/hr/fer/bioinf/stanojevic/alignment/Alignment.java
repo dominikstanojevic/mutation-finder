@@ -1,28 +1,88 @@
 package hr.fer.bioinf.stanojevic.alignment;
 
 import hr.fer.bioinf.stanojevic.Utils;
+import hr.fer.bioinf.stanojevic.mapping.Mapping;
 import hr.fer.bioinf.stanojevic.mapping.MappingResult;
+import hr.fer.bioinf.stanojevic.mapping.Nucleobase;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Alignment {
     public static final int MATCH = 4;
     public static final int DIFF = -1;
     public static final int EMPTY = -2;
 
-    public static void alignQuery(String reference, String query, List<MappingResult> regions) {
+    public static Map<Integer, List<Info>> alignAll(String reference, String[] queries, int w, int k, int eps) {
+        Map<Integer, List<Info>> info = new HashMap<>();
+
+        var table = Mapping.index(new String[]{reference}, w, k);
+        for (String query : queries) {
+            var regions = Mapping.map(table, query, w, k, eps);
+            var result = Alignment.alignQuery(reference, query, regions);
+
+            for (var entry : result.entrySet()) {
+                var list = info.computeIfAbsent(entry.getKey(), s -> new ArrayList<>());
+                list.add(entry.getValue());
+            }
+        }
+
+        return info;
+    }
+
+    public static Map<Integer, Info> alignQuery(String reference, String query, List<MappingResult> regions) {
+        Map<Integer, Info> info = new HashMap<>();
+
+        AlignmentInfo best = null;
+        int bestStart = -1;
         for (MappingResult region : regions) {
             int len = region.end - region.start;
+
             int start = region.start - (query.length() - len);
+            start = start > 0 ? start : 0;
+
             int end = region.end + (query.length() - len);
+            end = end < reference.length() ? end : reference.length();
 
-            var resultS = align(reference.substring(start, end), query);
-
+            AlignmentInfo result = align(reference.substring(start, end), query);
+            if (best == null || best.value < result.value) {
+                best = result;
+                bestStart = start;
+            }
         }
+
+        var aligned = best.aligned;
+
+        int i = 0;
+        while (aligned.second.charAt(i) == '-') {
+            i++;
+        }
+
+        int j = query.length() - 1;
+        while (aligned.second.charAt(j) == '-') {
+            j--;
+        }
+
+        for(; i < j; i++) {
+            int pos = bestStart + i;
+            if (reference.charAt(pos) == '-' && query.charAt(i) == '-') {
+                System.out.println("Pička ti materina");
+            } else if (reference.charAt(pos) == '-') {
+                info.put(pos, new Info(pos, Option.INSERTION, Nucleobase.getNucleobase(query.charAt(i))));
+            } else if (query.charAt(i) == '-') {
+                info.put(pos, new Info(pos, Option.DELETION, null));
+            } else {
+                info.put(pos, new Info(pos, Option.CHANGE, Nucleobase.getNucleobase(query.charAt(i))));
+            }
+        }
+
+        return info;
     }
 
 
-    public static Utils.Pair<String, String> align(String s, String t) {
+    private static AlignmentInfo align(String s, String t) {
         int rows = s.length();
         int cols = t.length();
 
@@ -41,7 +101,7 @@ public class Alignment {
         return traceback(array, s, t);
     }
 
-    private static Utils.Pair<String, String> traceback(int[][] arr, String s, String t) {
+    private static AlignmentInfo traceback(int[][] arr, String s, String t) {
         int rows = arr.length - 1;
         int cols = arr[0].length - 1;
 
@@ -103,6 +163,16 @@ public class Alignment {
             }
         }
 
-        return new Utils.Pair<>(aS.toString(), aT.toString());
+        return new AlignmentInfo(maxValue, new Utils.Pair<>(aS.toString(), aT.toString()));
+    }
+
+    private static class AlignmentInfo {
+        public int value;
+        public Utils.Pair<String, String> aligned;
+
+        public AlignmentInfo(int value, Utils.Pair<String, String> aligned) {
+            this.value = value;
+            this.aligned = aligned;
+        }
     }
 }
