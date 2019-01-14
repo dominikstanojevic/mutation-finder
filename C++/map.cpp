@@ -1,6 +1,7 @@
 #include "map.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <set>
@@ -56,9 +57,43 @@ bool CompareGt(int a, int b){
     return a > b;
 }
 
-vector<map_data> LongestIncreasingSubsequence(vector<map_data> &arr, int start, int len, bool (*Compare)(int, int) ){
-    vector<map_data> m;
 
+
+vector<map_data> LongestIncreasingSubsequence(vector<map_data> &arr, int start, int len, bool (*Compare)(int, int) ){
+    vector<int> P;
+    vector<int> M;
+    P.resize(len);
+    M.resize(len + 1);
+    
+    int l = 0;
+    for (int i = 0; i < len; ++i){
+        int lo = 1, hi = l;
+
+        while (lo <= hi){
+            int mid = (int)ceil((lo + hi) / 2.0);
+            if (Compare(arr[start + mid].i, arr[start + i].i)) {
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+
+        int newL = lo;
+        P[i] = M[newL - 1];
+        M[newL] = i;
+
+        if (newL > l){
+            l = newL;
+        }
+    }
+
+    vector<map_data> m;
+    m.resize(l);
+    int k = M[l];
+    for (int i = l - 1; i >= 0; --i){
+        m[i] = arr[start + k];
+        k = P[k];
+    }
     return m;
 }
 

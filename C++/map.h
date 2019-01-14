@@ -30,6 +30,10 @@ struct map_data{
     int c;
     int i;
 
+    map_data(): t(0), r(0), c(0), i(0) {
+
+    }
+
     map_data(int _t, int _r, int _c, int _i): t(_t), r(_r), c(_c), i(_i) {
 
     }
