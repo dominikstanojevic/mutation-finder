@@ -7,6 +7,7 @@ import java.util.*;
 public class Mapping {
     public static final int MIN_COUNT = 4;
     public static final int MIN_READS = 100;
+    public static final int GAP = 10_000;
 
     public static Set<Minimizer> minimizerSketch(String s, int w, int k) {
         Set<Minimizer> minimizers = new LinkedHashSet<>();
@@ -71,6 +72,8 @@ public class Mapping {
                            String q, int w, int k, int eps) {
         List<MapData> arr = new ArrayList<>();
         Set<Minimizer> minimizers = minimizerSketch(q, w, k);
+
+        List<MapData[]> regions = new ArrayList<>();
         List<MappingResult> maps = new ArrayList<>();
 
         for (Minimizer m : minimizers) {
@@ -119,6 +122,19 @@ public class Mapping {
                 Comparator<Integer> comp = arr.get(e).r == 0 ? Comparator.naturalOrder() : Comparator.reverseOrder();
                 MapData[] C = longestIncreasingSubsequence(subList, comp);
 
+                int start = 0;
+                for (int end = 1; end < C.length; end++) {
+                    if (Math.abs(C[end].i - C[end - 1].i) >= GAP) {
+                        regions.add(Arrays.copyOfRange(C, start, end));
+                        start = end;
+                    }
+                }
+                regions.add(Arrays.copyOfRange(C, start, C.length));
+
+                b = e + 1;
+            }
+
+            for(MapData[] C : regions) {
                 if(C.length >= MIN_COUNT) {
                     int min, max;
                     if (arr.get(e).r == 0) {
@@ -138,8 +154,6 @@ public class Mapping {
                         System.out.println();
                     }
                 }
-
-                b = e + 1;
             }
         }
 
