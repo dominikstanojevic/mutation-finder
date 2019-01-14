@@ -2,7 +2,7 @@
 #define SKETCH_H
 
 #include <iostream>
-#include <set>
+#include <vector>
 
 using namespace std;
 
@@ -18,6 +18,6 @@ struct minimizer {
     }
 };
 
-set<minimizer> MinimizerSketch(string s, int w, int k);
+vector<minimizer> MinimizerSketch(string &s, int w, int k);
 
 #endif // SKETCH_H
