@@ -29,6 +29,7 @@ public enum Nucleobase {
     }
 
     public static Nucleobase getNucleobase(char c) {
+        c = Character.toUpperCase(c);
         switch (c) {
             case 'A':
                 return ADENINE;

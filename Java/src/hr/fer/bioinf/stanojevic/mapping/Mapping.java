@@ -2,14 +2,11 @@ package hr.fer.bioinf.stanojevic.mapping;
 
 import hr.fer.bioinf.stanojevic.Utils;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class Mapping {
     public static Set<Minimizer> minimizerSketch(String s, int w, int k) {
-        Set<Minimizer> minimizers = new HashSet<>();
+        Set<Minimizer> minimizers = new LinkedHashSet<>();
         long mask = (1L << (2*k)) - 1;
 
         for (int i = 0, end = s.length() - w - k + 1; i <= end; i++) {
@@ -57,7 +54,8 @@ public class Mapping {
         for (int i = 0; i < sequences.length; i++) {
             var minimizers = minimizerSketch(sequences[i], w, k);
             for (Minimizer m : minimizers) {
-                var set = table.computeIfAbsent(m.getHash(), k1 -> new HashSet<>());
+                long bucket = m.getHash();
+                var set = table.computeIfAbsent(bucket, k1 -> new HashSet<>());
 
                 set.add(new IndexData(i, m.getPosition(), m.getReversed()));
             }
@@ -72,28 +70,63 @@ public class Mapping {
         Set<Minimizer> minimizers = minimizerSketch(q, w, k);
 
         for (Minimizer m : minimizers) {
-            if (table.containsKey(m.getHash())) {
-                for (IndexData ind : table.get(m.getHash())) {
+            long bucket = m.getHash();
+            if (table.containsKey(bucket)) {
+                for (IndexData ind : table.get(bucket)) {
                     if (m.getReversed() == ind.r) {
-                        arr.add(new MapData(ind.t, 0, m.getPosition() - ind.i, ind.i));
+                        arr.add(new MapData(ind.t, 0, ind.i - m.getPosition(), ind.i));
+                        //System.out.println(ind.r + " " + (ind.i - m.getPosition()) + " " + (k - 1 + ind.i));
                     } else {
                         arr.add(new MapData(ind.t, 1, m.getPosition() + ind.i, ind.i));
+                        //System.out.println(ind.r + " " + (ind.i + m.getPosition()) + " " + (k - 1 + ind.i));
                     }
                 }
             }
         }
 
-        arr.sort(Comparator.naturalOrder());
+
+        arr.sort((o1, o2) -> {
+            int r = Integer.compare(o1.r, o2.r);
+            if (r != 0) {
+                return r;
+            }
+
+            int i = Integer.compare(o1.c, o2.c);
+            if (i != 0) {
+                return i;
+            }
+
+            return Integer.compare(o1.i, o2.i);
+        });
+
+
+        for (MapData md : arr) {
+            System.out.println(md.r + " " + md.c + " " + md.i);
+        }
 
         int b = 0;
+        //System.out.println("Veličina: " + arr.size());
         for (int e = 0, l = arr.size(); e < l; e++) {
             if (e == l - 1 ||
                     arr.get(e + 1).t != arr.get(e).t ||
                     arr.get(e + 1).r != arr.get(e).r ||
-                    arr.get(e + 1).c - arr.get(e).c >= eps) {
-                MapData[] C = longestIncreasingSubsequence(arr.subList(b, e + 1));
+                    arr.get(e + 1).c - arr.get(e).c > eps) {
+                //TODO Ovo ide nakon svega
+                if (e + 1 - b < 4) {
+                    continue;
+                }
 
-                System.out.println(Arrays.toString(C));
+                var subList = arr.subList(b, e + 1);
+                //System.out.println(b + " " + (e + 1));
+
+
+                MapData[] C = longestIncreasingSubsequence(subList);
+                //System.out.println(b + "    " + (e + 1));
+
+                int min = subList.stream().mapToInt(c -> c.i).min().getAsInt();
+                int max = subList.stream().mapToInt(c -> c.i).max().getAsInt();
+                //System.out.println(min + " " + max);
+
                 b = e + 1;
             }
         }
@@ -187,12 +220,6 @@ public class Mapping {
 
         @Override
         public int compareTo(MapData other) {
-            if (this.t < other.t) return -1;
-            if (this.t > other.t) return 1;
-
-            if (this.r < other.r) return -1;
-            if (this.r > other.r) return 1;
-
             if (this.c < other.c) return -1;
             if (this.c > other.c) return 1;
 
