@@ -67,10 +67,11 @@ public class Mapping {
         return table;
     }
 
-    public static void map(HashMap<Long, Set<IndexData>> table,
+    public static List<MappingResult> map(HashMap<Long, Set<IndexData>> table,
                            String q, int w, int k, int eps) {
         List<MapData> arr = new ArrayList<>();
         Set<Minimizer> minimizers = minimizerSketch(q, w, k);
+        List<MappingResult> maps = new ArrayList<>();
 
         for (Minimizer m : minimizers) {
             long bucket = m.getHash();
@@ -78,10 +79,8 @@ public class Mapping {
                 for (IndexData ind : table.get(bucket)) {
                     if (m.getReversed() == ind.r) {
                         arr.add(new MapData(ind.t, 0, ind.i - m.getPosition(), ind.i));
-                        //System.out.println(ind.r + " " + (ind.i - m.getPosition()) + " " + (k - 1 + ind.i));
                     } else {
                         arr.add(new MapData(ind.t, 1, m.getPosition() + ind.i, ind.i));
-                        //System.out.println(ind.r + " " + (ind.i + m.getPosition()) + " " + (k - 1 + ind.i));
                     }
                 }
             }
@@ -98,7 +97,6 @@ public class Mapping {
         });
 
         int b = 0;
-        //System.out.println("Veličina: " + arr.size());
         for (int e = 0, l = arr.size(); e < l; e++) {
             if (e == l - 1 ||
                     arr.get(e + 1).t != arr.get(e).t ||
@@ -106,7 +104,6 @@ public class Mapping {
                     arr.get(e + 1).c - arr.get(e).c > eps) {
 
                 var subList = arr.subList(b, e + 1);
-                //System.out.println(b + " " + (e + 1));
 
                 subList.sort((c1, c2) -> {
                     int q1 = getQPosition(c1.c, c1.i, c1.r);
@@ -119,18 +116,25 @@ public class Mapping {
                     return Integer.compare(c1.i, c2.i);
                 });
 
-                Comparator<Integer> comp = arr.get(e).r == 0 ? Comparator.naturalOrder() : Comparator.naturalOrder();
+                Comparator<Integer> comp = arr.get(e).r == 0 ? Comparator.naturalOrder() : Comparator.reverseOrder();
                 MapData[] C = longestIncreasingSubsequence(subList, comp);
-                //System.out.println(Arrays.toString(C));
-                //System.out.println(b + "    " + (e + 1));
 
                 if(C.length >= MIN_COUNT) {
-                    int min = C[0].i;
-                    int max = C[C.length - 1].i;
+                    int min, max;
+                    if (arr.get(e).r == 0) {
+                        min = C[0].i;
+                        max = C[C.length - 1].i;
+                    } else {
+                        min = C[C.length - 1].i;
+                        max = C[0].i;
+                    }
 
                     if (max - min >= MIN_READS) {
                         System.out.println("Strand: " + arr.get(e).r);
-                        System.out.println(min + " " + max);
+                        System.out.println(min + " " + (max + k));
+
+                        maps.add(new MappingResult(min, max + k));
+
                         System.out.println();
                     }
                 }
@@ -138,14 +142,15 @@ public class Mapping {
                 b = e + 1;
             }
         }
+
+        return maps;
     }
 
     public static int getQPosition(int c, int i, int r) {
         if (r == 0) {
             return i - c;
         } else {
-
-            return c + i;
+            return c - i;
         }
     }
 
