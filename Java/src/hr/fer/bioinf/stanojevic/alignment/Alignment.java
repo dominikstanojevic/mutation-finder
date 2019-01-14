@@ -17,7 +17,7 @@ public class Alignment {
             int end = region.end + (query.length() - len);
 
             var resultS = align(reference.substring(start, end), query);
-            
+
         }
     }
 
