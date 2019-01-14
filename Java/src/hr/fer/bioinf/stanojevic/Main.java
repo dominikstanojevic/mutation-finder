@@ -17,7 +17,7 @@ public class Main {
         String ref = String.join("", Files.readAllLines(Paths.get(REF_PATH)));
         String query = String.join("", Files.readAllLines(Paths.get(Q_PATH)));
 
-        var table = Mapping.index(new String[]{ref}, 10, 15);
-        Mapping.map(table, query, 10, 15, 500);
+        var table = Mapping.index(new String[]{ref}, 3,5);
+        Mapping.map(table, query, 3, 5, 500);
     }
 }

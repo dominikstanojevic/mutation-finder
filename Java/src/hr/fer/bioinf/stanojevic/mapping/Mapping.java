@@ -5,6 +5,9 @@ import hr.fer.bioinf.stanojevic.Utils;
 import java.util.*;
 
 public class Mapping {
+    public static final int MIN_COUNT = 4;
+    public static final int MIN_READS = 100;
+
     public static Set<Minimizer> minimizerSketch(String s, int w, int k) {
         Set<Minimizer> minimizers = new LinkedHashSet<>();
         long mask = (1L << (2*k)) - 1;
@@ -91,18 +94,8 @@ public class Mapping {
                 return r;
             }
 
-            int i = Integer.compare(o1.c, o2.c);
-            if (i != 0) {
-                return i;
-            }
-
-            return Integer.compare(o1.i, o2.i);
+            return Integer.compare(o1.c, o2.c);
         });
-
-
-        for (MapData md : arr) {
-            System.out.println(md.r + " " + md.c + " " + md.i);
-        }
 
         int b = 0;
         //System.out.println("Veličina: " + arr.size());
@@ -111,28 +104,52 @@ public class Mapping {
                     arr.get(e + 1).t != arr.get(e).t ||
                     arr.get(e + 1).r != arr.get(e).r ||
                     arr.get(e + 1).c - arr.get(e).c > eps) {
-                //TODO Ovo ide nakon svega
-                if (e + 1 - b < 4) {
-                    continue;
-                }
 
                 var subList = arr.subList(b, e + 1);
                 //System.out.println(b + " " + (e + 1));
 
+                subList.sort((c1, c2) -> {
+                    int q1 = getQPosition(c1.c, c1.i, c1.r);
+                    int q2 = getQPosition(c2.c, c2.i, c2.r);
 
-                MapData[] C = longestIncreasingSubsequence(subList);
+                    int i = Integer.compare(q1, q2);
+                    if (i < 0) return -1;
+                    if (i > 0) return 1;
+
+                    return Integer.compare(c1.i, c2.i);
+                });
+
+                Comparator<Integer> comp = arr.get(e).r == 0 ? Comparator.naturalOrder() : Comparator.naturalOrder();
+                MapData[] C = longestIncreasingSubsequence(subList, comp);
+                //System.out.println(Arrays.toString(C));
                 //System.out.println(b + "    " + (e + 1));
 
-                int min = subList.stream().mapToInt(c -> c.i).min().getAsInt();
-                int max = subList.stream().mapToInt(c -> c.i).max().getAsInt();
-                //System.out.println(min + " " + max);
+                if(C.length >= MIN_COUNT) {
+                    int min = C[0].i;
+                    int max = C[C.length - 1].i;
+
+                    if (max - min >= MIN_READS) {
+                        System.out.println("Strand: " + arr.get(e).r);
+                        System.out.println(min + " " + max);
+                        System.out.println();
+                    }
+                }
 
                 b = e + 1;
             }
         }
     }
 
-    public static MapData[] longestIncreasingSubsequence(List<MapData> eAway) {
+    public static int getQPosition(int c, int i, int r) {
+        if (r == 0) {
+            return i - c;
+        } else {
+
+            return c + i;
+        }
+    }
+
+    public static MapData[] longestIncreasingSubsequence(List<MapData> eAway, Comparator<Integer> comparator) {
         int[] P = new int[eAway.size()];
         int[] M = new int[eAway.size() + 1];
 
@@ -142,7 +159,7 @@ public class Mapping {
 
             while (lo <= hi) {
                 int mid = (int) Math.ceil((lo + hi) / 2.);
-                if (eAway.get(M[mid]).c < eAway.get(i).c) {
+                if (comparator.compare(eAway.get(M[mid]).i, eAway.get(i).i) < 0) {
                     lo = mid + 1;
                 } else {
                     hi = mid - 1;
