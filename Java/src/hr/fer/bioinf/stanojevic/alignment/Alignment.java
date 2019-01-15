@@ -5,15 +5,14 @@ import hr.fer.bioinf.stanojevic.mapping.Mapping;
 import hr.fer.bioinf.stanojevic.mapping.MappingResult;
 import hr.fer.bioinf.stanojevic.mapping.Nucleobase;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Alignment {
     public static final int MATCH = 4;
     public static final int DIFF = -1;
     public static final int EMPTY = -2;
+
+    public static int counter = 0;
 
     public static Map<Integer, List<Info>> alignAll(String reference, String[] queries, int w, int k, int eps) {
         Map<Integer, List<Info>> info = new HashMap<>();
@@ -39,11 +38,18 @@ public class Alignment {
         int bestStart = -1;
         for (MappingResult region : regions) {
             int len = region.end - region.start;
+            if (len < 0) {
+                throw new RuntimeException("Puče");
+            }
 
-            int start = region.start - (query.length() - len);
+            int diff = query.length() - len;
+            diff /= 2;
+            diff = 0;
+
+            int start = diff > 0 ? (region.start - diff) : region.start;
             start = start > 0 ? start : 0;
 
-            int end = region.end + (query.length() - len);
+            int end = diff > 0 ? (region.end + diff) : region.end;
             end = end < reference.length() ? end : reference.length();
 
             AlignmentInfo result = align(reference.substring(start, end), query);
@@ -53,6 +59,9 @@ public class Alignment {
             }
         }
 
+        if (best == null) {
+            return Collections.emptyMap();
+        }
         var aligned = best.aligned;
 
         int i = 0;
@@ -67,17 +76,17 @@ public class Alignment {
 
         for(; i < j; i++) {
             int pos = bestStart + i;
-            if (reference.charAt(pos) == '-' && query.charAt(i) == '-') {
-                System.out.println("Pička ti materina");
+
+            if (query.charAt(i) == '-') {
+                info.put(pos, new Info(pos, Option.DELETION, null));
             } else if (reference.charAt(pos) == '-') {
                 info.put(pos, new Info(pos, Option.INSERTION, Nucleobase.getNucleobase(query.charAt(i))));
-            } else if (query.charAt(i) == '-') {
-                info.put(pos, new Info(pos, Option.DELETION, null));
             } else {
                 info.put(pos, new Info(pos, Option.CHANGE, Nucleobase.getNucleobase(query.charAt(i))));
             }
         }
 
+        System.out.println("Gotov " + counter++);
         return info;
     }
 

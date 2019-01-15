@@ -13,13 +13,21 @@ public class Mapping {
         Set<Minimizer> minimizers = new LinkedHashSet<>();
         long mask = (1L << (2*k)) - 1;
 
+        Map<Integer, Utils.Pair<Long, Long>> c = new HashMap<>();
+
         for (int i = 0, end = s.length() - w - k + 1; i <= end; i++) {
             long m = Long.MAX_VALUE;
 
             Map<Integer, Utils.Pair<Long, Long>> cache = new HashMap<>();
             for (int j = 0; j < w; j++) {
                 int start = i + j;
-                var pair = kmerToLongs(s.substring(start, start + k));
+                Utils.Pair<Long, Long> pair;
+                if(!c.containsKey(start)) {
+                    pair = kmerToLongs(s.substring(start, start + k));
+                    c.put(start, pair);
+                } else {
+                    pair = c.get(start);
+                }
 
                 long u = invertibleHash(pair.first, mask);
                 long v = invertibleHash(pair.second, mask);
@@ -146,12 +154,12 @@ public class Mapping {
                     }
 
                     if (max - min >= MIN_READS) {
-                        System.out.println("Strand: " + arr.get(e).r);
-                        System.out.println(min + " " + (max + k));
+                        //System.out.println("Strand: " + arr.get(e).r);
+                        //System.out.println(min + " " + (max + k));
 
                         maps.add(new MappingResult(min, max + k));
 
-                        System.out.println();
+                        //System.out.println();
                     }
                 }
             }
