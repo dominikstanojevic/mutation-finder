@@ -164,8 +164,8 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    int w   =  3;//10;
-    int k   =  5;//15;
+    int w   =  10;//10;
+    int k   =  15;//15;
     int eps = 500;
 
     string f_genome = argv[1];

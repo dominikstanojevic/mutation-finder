@@ -23,10 +23,13 @@ public class Main {
 
     public static final Random RANDOM = new Random();
 
+    public static int max = -1;
+
     public static void main(String[] args) throws IOException {
         var ref = readFile(Paths.get("data/ecoli.fasta")).get(0);
 
         var queries = readFile(Paths.get("data/ecoli_simulated_reads.fasta"));
+        max = queries.stream().mapToInt(q -> q.length()).max().getAsInt();
         System.out.println(queries.size());
 
         var a = Alignment.alignAll(ref, queries.toArray(new String[queries.size()]), W, K, EPS);

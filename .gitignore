@@ -428,3 +428,5 @@ ASALocalRun/
 healthchecksdb
 
 # End of https://www.gitignore.io/api/c++,linux,windows,visualstudio,visualstudiocode
+Java/data/result.csv
+C++/result.csv

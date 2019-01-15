@@ -45,7 +45,6 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
     for (auto region : regions) {
         int len = region.end - region.start;
         int diff = query.size() - len;
-        diff /= 2;
 
         int start = diff > 0 ? (region.start - diff) : region.start;
         if (start < 0) start = 0;
@@ -66,7 +65,7 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
     }
 
     int i = 0;
-    while (best.alX[i] == '-') ++i;
+    while (best.alY[i] == '-') ++i;
     int j = best.alY.size() - 1;
     while (best.alY[j] == '-') --j;
 
@@ -76,10 +75,10 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
             infoMap[2][pos] = info(pos, I_DEL, '0');
             pos++;
         } else if (best.alX[pos] == '-') {
-            infoMap[1][pos] = info(pos, I_INS, query[i]);
+            infoMap[1][pos] = info(pos, I_INS, best.alY[i]);
         } else {
-            infoMap[0][pos] = info(pos, I_CHA, query[i]);
-            pos--;
+            infoMap[0][pos] = info(pos, I_CHA, best.alY[i]);
+            pos++;
         }
     }
 }
@@ -90,9 +89,6 @@ alignmnent_info align(string &s, string &t){
 
     int *array = (int*)malloc(sizeof(int) * rows * cols);
     
-    for (int i = 0; i < rows; ++i){
-        array[i * cols] = 0;
-    }
     for (int j = 0; j < cols; ++j){
         array[j] = 0;
     }
@@ -100,6 +96,7 @@ alignmnent_info align(string &s, string &t){
         for (int j = 1; j < cols; ++j){
             int match = (s[i-1] == t[j-1]) ? MATCH : DIFF;
             match += array[(i-1) * cols + j-1];
+            
             int del = array[(i-1) * cols + j] + EMPTY;
             int insert = array[i * cols + j-1] + EMPTY;
 
@@ -107,37 +104,22 @@ alignmnent_info align(string &s, string &t){
         }
     }
 
-    int i = rows-1;
-    int j = 0;
-    int maxValue = array[i * cols + j];
+    int i = 0;
+    int j = cols - 1;
+    int maxValue = array[j];
 
-    for (int e = 1; e < cols; ++e){
-        if (array[i*cols + e] > maxValue){
-            j = e;
-            maxValue = array[i*cols + e];
-        }
-    }
-
-    for (int e = 0; e < rows; ++e){
-        if (array[e*cols + cols-1] > maxValue){
+    for (int e = 1; e < rows; ++e){
+        if (array[e*cols + j] > maxValue){
             i = e;
-            maxValue = array[e*cols + cols-1];
+            maxValue = array[e*cols + j];
         }
     }
 
     string aS = "", aT = "";
-    if (i == rows-1 && j != cols-1) {
-        for (int e = 0; e < cols-1-j; ++e){
-            aS.append("-");
-        }
-        aT = t.substr(j, cols-j-1);
-    } else if (i != rows-1 && j == cols-1) {
-        aS = s.substr(i, rows-1-i);
-        for (int e = 0; e < rows-1-i; ++e){
-            aT.append("-");
-        }
+    aS = s.substr(i, rows-1-i);
+    for (int e = 0, end = rows - 1 - i; e < end; ++e){
+        aT.append("-");
     }
-
 
     string raS = "", raT = "";
 
