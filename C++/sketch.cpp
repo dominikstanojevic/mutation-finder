@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstring>
+#include <set>
 #include <vector>
 
 #include "utils.h"
@@ -25,8 +26,8 @@ int ComplementBase(int base){
     return 3 - base;
 }
 
-vector<minimizer> MinimizerSketch(string &s, int w, int k){
-    vector<minimizer> minimizers;
+set<minimizer> MinimizerSketch(string &s, int w, int k){
+    set<minimizer> minimizers;
     int len = s.size();
 
     uint64_t mask = (1ULL << (2*k)) - 1;
@@ -51,19 +52,19 @@ vector<minimizer> MinimizerSketch(string &s, int w, int k){
         int strand = kmer[0] < kmer[1] ? 0 : 1;
 
         tmp_min.hash = Hash(kmer[strand], mask);
-        tmp_min.end_position = i;
+        tmp_min.end_position = i - k + 1;
         tmp_min.strand = strand;
         window[window_index] = tmp_min;
 
         if (tmp_min.hash <= min.hash){
-            if (min.end_position >= k){
-                minimizers.push_back(min);
+            if (min.end_position >= 1){
+                minimizers.insert(min);
             }
             min = tmp_min;
             min_index = window_index;
         } else if (window_index == min_index){
-            if (min.end_position >= k){
-                minimizers.push_back(min);
+            if (min.end_position >= 1){
+                minimizers.insert(min);
             }
 
             min.hash = UINT64_MAX;
@@ -71,6 +72,14 @@ vector<minimizer> MinimizerSketch(string &s, int w, int k){
                 if (window[j % w].hash < min.hash){
                     min = window[j % w];
                     min_index = j % w;
+                }
+            }
+
+            if (min.end_position >= 1){
+                for (int j = window_index + 1; j < window_index + w + 1; ++j){
+                    if (window[j % w].hash == min.hash && window[j % w].end_position != min.end_position){
+                        minimizers.insert(window[j % w]);
+                    }
                 }
             }
         }
@@ -82,7 +91,7 @@ vector<minimizer> MinimizerSketch(string &s, int w, int k){
     }
 
     if (min.hash < UINT64_MAX){
-        minimizers.push_back(min);
+        minimizers.insert(min);
     }
 
     free(window);
