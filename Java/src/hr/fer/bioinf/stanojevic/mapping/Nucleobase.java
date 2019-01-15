@@ -47,4 +47,19 @@ public enum Nucleobase {
                 throw new RuntimeException("Invalid character");
         }
     }
+
+    public static Nucleobase getNucleobase(int i) {
+        switch (i) {
+            case 0:
+                return ADENINE;
+            case 1:
+                return CYTOSINE;
+            case 2:
+                return GUANINE;
+            case 3:
+                return THYMINE;
+            default:
+                throw new RuntimeException("Invalid number.");
+        }
+    }
 }

@@ -14,25 +14,35 @@ public class Alignment {
 
     public static int counter = 0;
 
-    public static Map<Integer, List<Info>> alignAll(String reference, String[] queries, int w, int k, int eps) {
-        Map<Integer, List<Info>> info = new HashMap<>();
+    public static Map<Integer, List<Info>>[] alignAll(String reference, String[] queries, int w, int k, int eps) {
+        //0 CHANGE 1 INSERTION 2 DELETION
+        Map<Integer, List<Info>>[] info = new HashMap[3];
+        info[0] = new HashMap<>();
+        info[1] = new HashMap<>();
+        info[2] = new HashMap<>();
 
         var table = Mapping.index(new String[]{reference}, w, k);
         for (String query : queries) {
             var regions = Mapping.map(table, query, w, k, eps);
             var result = Alignment.alignQuery(reference, query, regions);
 
-            for (var entry : result.entrySet()) {
-                var list = info.computeIfAbsent(entry.getKey(), s -> new ArrayList<>());
-                list.add(entry.getValue());
+            for(int i = 0; i < 3; i++) {
+                for (var entry : result[i].entrySet()) {
+                    var list = info[i].computeIfAbsent(entry.getKey(), s -> new ArrayList<>());
+                    list.add(entry.getValue());
+                }
             }
         }
 
         return info;
     }
 
-    public static Map<Integer, Info> alignQuery(String reference, String query, List<MappingResult> regions) {
-        Map<Integer, Info> info = new HashMap<>();
+    public static Map<Integer, Info>[] alignQuery(String reference, String query, List<MappingResult> regions) {
+        //0 CHANGE 1 INSERTION 2 DELETION
+        Map<Integer, Info>[] info = new HashMap[3];
+        info[0] = new HashMap<>();
+        info[1] = new HashMap<>();
+        info[2] = new HashMap<>();
 
         AlignmentInfo best = null;
         int bestStart = -1;
@@ -57,13 +67,13 @@ public class Alignment {
             }
         }
 
-        for(int i = 0; i < best.aligned.first.length(); i++) {
+        /*for(int i = 0; i < best.aligned.first.length(); i++) {
             System.out.println(i + " " + best.aligned.first.charAt(i) + " " + best.aligned.second.charAt(i));
         }
-
+*/
 
         if (best == null) {
-            return Collections.emptyMap();
+            return info;
         }
         var aligned = best.aligned;
 
@@ -80,12 +90,12 @@ public class Alignment {
         int pos = bestStart + i;
         for(; i < j; i++) {
             if (aligned.second.charAt(i) == '-') {
-                info.put(pos, new Info(pos, Option.DELETION, null));
+                info[2].put(pos, new Info(pos, Option.DELETION, null));
                 pos++;
             } else if (aligned.first.charAt(i) == '-') {
-                info.put(pos, new Info(pos, Option.INSERTION, Nucleobase.getNucleobase(aligned.second.charAt(i))));
+                info[1].put(pos, new Info(pos, Option.INSERTION, Nucleobase.getNucleobase(aligned.second.charAt(i))));
             } else {
-                info.put(pos, new Info(pos, Option.CHANGE, Nucleobase.getNucleobase(aligned.second.charAt(i))));
+                info[0].put(pos, new Info(pos, Option.CHANGE, Nucleobase.getNucleobase(aligned.second.charAt(i))));
                 pos++;
             }
         }
