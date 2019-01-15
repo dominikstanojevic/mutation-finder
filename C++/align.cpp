@@ -97,7 +97,7 @@ alignmnent_info align(string &s, string &t){
             int match = (s[i-1] == t[j-1]) ? MATCH : DIFF;
             match += array[(i-1) * cols + j-1];
             int del = array[(i-1) * cols + j] + EMPTY;
-            int insert = array[i * cols + j - 1] + EMPTY;
+            int insert = array[i * cols + j-1] + EMPTY;
 
             array[i * cols + j] = max(max(match, del), insert);
         }
@@ -134,22 +134,24 @@ alignmnent_info align(string &s, string &t){
         }
     }
 
+
     string raS = "", raT = "";
 
     while (i > 0 || j > 0){
-        if (i > 0 && j > 0 &&
-                array[i*cols + j] == array[(i-1)*cols + j-1] + (s[i-1] == t[j-1]) ? MATCH : DIFF){
+        if ((i > 0) && 
+                (j > 0) &&
+                (array[i*cols + j] == (array[(i-1)*cols + j-1] + ((s[i-1] == t[j-1]) ? MATCH : DIFF)))){
             raS += s[i-1];
             raT += t[j-1];
 
             i--; j--;
         } else if (i > 0){
             raS += s[i-1];
-            raT += '-';
+            raT.append("-");
 
             i--;
         } else {
-            raS += '-';
+            raS.append("-");
             raT += t[j-1];
 
             j--;
