@@ -10,15 +10,15 @@
 
 using namespace std;
 
-#define I_NULL -1
-#define I_DEL 1
-#define I_INS 2
-#define I_CHA 3
+#define I_NULL (short)-1
+#define I_DEL (short)1
+#define I_INS (short)2
+#define I_CHA (short)3
 
-#define I_A 11
-#define I_C 12
-#define I_G 13
-#define I_T 14
+#define I_A (short)11
+#define I_C (short)12
+#define I_G (short)13
+#define I_T (short)14
 
 struct info {
     int pos;
