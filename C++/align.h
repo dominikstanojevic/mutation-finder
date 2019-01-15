@@ -83,8 +83,9 @@ struct alignmnent_info {
     }
 };
 
-map<int, vector<info> > AlignAll(string &reference, vector<string> &queries, int w, int k, int eps);
-map<int, info> AlignQuery(string &reference, string &query, vector<mapping_result> regions);
+void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps, vector< map<int, vector<info> > > &mapInfo);
+void AlignQuery(string &reference, string &query, vector<mapping_result> &regions, vector< map<int, info> > &infoMap);
 alignmnent_info align(string &s, string &t);
+
 
 #endif // ALIGN_H

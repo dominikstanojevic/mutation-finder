@@ -14,33 +14,38 @@ const int MATCH =  4;
 const int DIFF  = -1;
 const int EMPTY = -2;
 
-map<int, vector<info> > AlignAll(string &reference, vector<string> &queries, int w, int k, int eps){
-    map<int, vector<info> > mapInfo;
+void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps,
+        vector< map<int, vector<info> > > &mapInfo){
+    mapInfo.resize(3);
 
     auto table = Index(&reference, 1, w, k);
     for (auto query : queries){
         auto regions = Map(table, query, w, k, eps);
-        auto result = AlignQuery(reference, query, regions);
 
-        for (auto entry : result){
-            if (mapInfo.count(entry.first) == 0){
-                mapInfo[entry.first] = vector<info>();
+        vector< map<int, info> > result; 
+        AlignQuery(reference, query, regions, result);
+
+        for (int i = 0; i < 3; ++i){
+            for (auto entry : result[i]){
+                if (mapInfo[i].count(entry.first) == 0){
+                    mapInfo[i][entry.first] = vector<info>();
+                }
+                mapInfo[i][entry.first].push_back(entry.second);
             }
-            mapInfo[entry.first].push_back(entry.second);
         }
     }
-
-    return mapInfo;
 }
 
-map<int, info> AlignQuery(string &reference, string &query, vector<mapping_result> regions){
-    map<int, info> infoMap;
+void AlignQuery(string &reference, string &query, vector<mapping_result> &regions,
+        vector< map<int, info> > &infoMap){
+    infoMap.resize(3);
     alignmnent_info best;
     int bestStart = -1;
 
     for (auto region : regions) {
         int len = region.end - region.start;
         int diff = query.size() - len;
+        diff /= 2;
 
         int start = diff > 0 ? (region.start - diff) : region.start;
         if (start < 0) start = 0;
@@ -57,27 +62,26 @@ map<int, info> AlignQuery(string &reference, string &query, vector<mapping_resul
     }
 
     if (best.alX == "") {
-        return infoMap;
+        return;
     }
 
     int i = 0;
     while (best.alX[i] == '-') ++i;
-    int j = query.size() - 1;
+    int j = best.alY.size() - 1;
     while (best.alY[j] == '-') --j;
 
+    int pos = bestStart + i;
     for (; i < j; ++i){
-        int pos = bestStart + i;
-
-        if (query[i] == '-'){
-            infoMap[pos] = info(pos, I_DEL, '0');
-        } else if (reference[pos] == '-') {
-            infoMap[pos] = info(pos, I_INS, query[i]);
+        if (best.alY[i] == '-'){
+            infoMap[2][pos] = info(pos, I_DEL, '0');
+            pos++;
+        } else if (best.alX[pos] == '-') {
+            infoMap[1][pos] = info(pos, I_INS, query[i]);
         } else {
-            infoMap[pos] = info(pos, I_CHA, query[i]);
+            infoMap[0][pos] = info(pos, I_CHA, query[i]);
+            pos--;
         }
     }
-
-    return infoMap;
 }
 
 alignmnent_info align(string &s, string &t){
