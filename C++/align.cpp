@@ -69,11 +69,11 @@ map<int, info> AlignQuery(string &reference, string &query, vector<mapping_resul
         int pos = bestStart + i;
 
         if (query[i] == '-'){
-            infoMap[pos] = info(pos, 'd', '0');
+            infoMap[pos] = info(pos, I_DEL, '0');
         } else if (reference[pos] == '-') {
-            infoMap[pos] = info(pos, 'i', query[i]);
+            infoMap[pos] = info(pos, I_INS, query[i]);
         } else {
-            infoMap[pos] = info(pos, 'c', query[i]);
+            infoMap[pos] = info(pos, I_CHA, query[i]);
         }
     }
 
@@ -145,16 +145,16 @@ alignmnent_info align(string &s, string &t){
             raT += t[j-1];
 
             i--; j--;
-        } else if (i > 0){
-            raS += s[i-1];
-            raT.append("-");
-
-            i--;
-        } else {
+        } else if ((j > 0) && (array[i*cols + j] == (array[i*cols + j-1] + EMPTY))) {
             raS.append("-");
             raT += t[j-1];
 
             j--;
+        } else {
+            raS += s[i-1];
+            raT.append("-");
+
+            i--;
         }
     }
 
@@ -164,5 +164,6 @@ alignmnent_info align(string &s, string &t){
     aS = raS + aS;
     aT = raT + aT;
 
+    free(array);
     return alignmnent_info(maxValue, aS, aT);
 }

@@ -10,21 +10,57 @@
 
 using namespace std;
 
+#define I_NULL -1
+#define I_DEL 1
+#define I_INS 2
+#define I_CHA 3
+
+#define I_A 11
+#define I_C 12
+#define I_G 13
+#define I_T 14
+
 struct info {
     int pos;
-    char option;
-    char base;
+    short option;
+    short base;
 
-    info(int _pos, char _option, char _base): 
+    info(int _pos, short _option, short _base): 
         pos(_pos),
         option(_option),
         base(_base) {
     }
 
+    info(int _pos, short _option, char _base): 
+        pos(_pos),
+        option(_option) {
+
+        switch(_base) {
+            case 'a':
+            case 'A':
+                base = I_A;
+                break;
+            case 'c':
+            case 'C':
+                base = I_C;
+                break;
+            case 'g':
+            case 'G':
+                base = I_G;
+                break;
+            case 't':
+            case 'T':
+                base = I_T;
+                break;
+            default:
+                base = I_NULL;
+        }
+    }
+
     info(){
-        pos = 0;
-        option = '\0';
-        base = '\0';
+        pos = I_NULL;
+        option = I_NULL;
+        base = I_NULL;
     }
 };
 
