@@ -20,14 +20,19 @@ public class Main {
     public static final int K = 15;
     public static final int EPS = 500;
 
-    public static void main(String[] args) throws IOException {
-        var ref = readFile(Paths.get("data/ecoli.fasta")).get(0);
+    public static void main2(String[] args) throws IOException {
+//        var ref = readFile(Paths.get("data/ecoli.fasta")).get(0);
+//
+//        var queries = readFile(Paths.get("data/ecoli_simulated_reads.fasta"));
+//        queries = queries.subList(145, queries.size());
+//        System.out.println(queries.size());
+//
+//        Map<Integer, List<Info>> a = Alignment.alignAll(ref, queries.toArray(new String[queries.size()]), W, K, EPS);
 
-        var queries = readFile(Paths.get("data/ecoli_simulated_reads.fasta"));
-        queries = queries.subList(73, queries.size());
-        System.out.println(queries.size());
+        String ref = String.join("", Files.readAllLines(Paths.get(REF_PATH)));
+        String query = String.join("", Files.readAllLines(Paths.get(Q_PATH)));
 
-        Map<Integer, List<Info>> a = Alignment.alignAll(ref, queries.toArray(new String[queries.size()]), W, K, EPS);
+        var a = Alignment.alignAll(ref, new String[]{query}, W, K, EPS);
 
         int other = 0;
         for(int i = 0; i < ref.length(); i++, other++) {
@@ -51,15 +56,30 @@ public class Main {
         }
     }
 
+    public static void main(String[] args) {
+        String ref = "AATCGACTAGGACGGTAACGCATTGAGAGTT";
+        String query = "AACGTTAGAGTT";
+
+        var result = Alignment.align(ref, query);
+        System.out.println(result.aligned.first + " " + " " + result.aligned.second);
+    }
+
     private static Info vote(List<Info> list) {
         if(list.size() == 0) {
             return null;
         }
 
+        int deletion = 0;
         int[] bases = new int[4];
         for(int i = 0, e = list.size(); i < e; i++) {
-            bases[list.get(i).base.getNumber()] += 1;
+            Info info = list.get(i);
+            if (info.base == null) {
+                deletion++;
+            } else {
+                bases[info.base.getNumber()] += 1;
+            }
         }
+
 
         List<Integer> mostCommon = new ArrayList<>();
         mostCommon.add(0);
@@ -72,6 +92,10 @@ public class Main {
             } else if (count == bases[i]) {
                 mostCommon.add(i);
             }
+        }
+
+        if (deletion > count) {
+            return new Info(0, Option.DELETION, null);
         }
 
         int base = new Random().nextInt(mostCommon.size());

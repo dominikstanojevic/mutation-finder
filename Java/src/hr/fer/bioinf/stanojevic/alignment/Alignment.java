@@ -43,8 +43,6 @@ public class Alignment {
             }
 
             int diff = query.length() - len;
-            diff /= 2;
-            diff = 0;
 
             int start = diff > 0 ? (region.start - diff) : region.start;
             start = start > 0 ? start : 0;
@@ -59,6 +57,11 @@ public class Alignment {
             }
         }
 
+        for(int i = 0; i < best.aligned.first.length(); i++) {
+            System.out.println(i + " " + best.aligned.first.charAt(i) + " " + best.aligned.second.charAt(i));
+        }
+
+
         if (best == null) {
             return Collections.emptyMap();
         }
@@ -69,20 +72,21 @@ public class Alignment {
             i++;
         }
 
-        int j = query.length() - 1;
+        int j = aligned.second.length() - 1;
         while (aligned.second.charAt(j) == '-') {
             j--;
         }
 
+        int pos = bestStart + i;
         for(; i < j; i++) {
-            int pos = bestStart + i;
-
-            if (query.charAt(i) == '-') {
+            if (aligned.second.charAt(i) == '-') {
                 info.put(pos, new Info(pos, Option.DELETION, null));
-            } else if (reference.charAt(pos) == '-') {
-                info.put(pos, new Info(pos, Option.INSERTION, Nucleobase.getNucleobase(query.charAt(i))));
+                pos++;
+            } else if (aligned.first.charAt(i) == '-') {
+                info.put(pos, new Info(pos, Option.INSERTION, Nucleobase.getNucleobase(aligned.second.charAt(i))));
             } else {
-                info.put(pos, new Info(pos, Option.CHANGE, Nucleobase.getNucleobase(query.charAt(i))));
+                info.put(pos, new Info(pos, Option.CHANGE, Nucleobase.getNucleobase(aligned.second.charAt(i))));
+                pos++;
             }
         }
 
@@ -91,11 +95,15 @@ public class Alignment {
     }
 
 
-    private static AlignmentInfo align(String s, String t) {
+    public static AlignmentInfo align(String s, String t) {
         int rows = s.length();
         int cols = t.length();
 
         int[][] array = new int[rows + 1][cols + 1];
+
+        for (int j = 1; j <= cols; j++) {
+            array[0][j] = j * EMPTY;
+        }
 
         for(int i = 1; i <= rows; i++) {
             for (int j = 1; j <= cols; j++) {
@@ -114,51 +122,49 @@ public class Alignment {
         int rows = arr.length - 1;
         int cols = arr[0].length - 1;
 
-        int i = rows;
-        int j = 0;
-        int maxValue = arr[rows][0];
+        int i = 0;
+        int j = cols;
+        int maxValue = arr[0][cols];
 
-        for(int e = 1; e <= cols; e++) {
-            if (arr[rows][e] > maxValue) {
-                j = e;
-                maxValue = arr[rows][j];
-            }
-        }
-
-        for(int e = 0; e <= rows; e++) {
+        for(int e = 1; e <= rows; e++) {
             if (arr[e][cols] > maxValue) {
                 i = e;
-                maxValue = arr[i][cols];
+                maxValue = arr[e][cols];
             }
         }
 
         StringBuilder aS, aT;
-        if (i == rows && j == cols) {
-            aS = new StringBuilder();
-            aT = new StringBuilder();
-        } else if (i == rows) {
-            aS = new StringBuilder();
-            for(int e = 0, end = cols - j; e < end; e++) {
-                aS.append('-');
-            }
-
-            aT = new StringBuilder(t.substring(j, cols));
-        } else {
-            aS = new StringBuilder(s.substring(i, rows));
-
-            aT = new StringBuilder();
-            for(int e = 0, end = rows - i; e < end; e++) {
+        aS = new StringBuilder(s.substring(i, rows));
+        aT = new StringBuilder();
+        for(int e = 0, end = rows - i; e < end; e++) {
                 aT.append('-');
-            }
         }
 
         while (i > 0 || j > 0) {
             if (i > 0 && j > 0 &&
                     arr[i][j] == arr[i - 1][j - 1] + (s.charAt(i - 1) == t.charAt(j - 1) ? MATCH : DIFF)) {
-                aS.insert(0, s.charAt(i - 1));
+                i--; j--;
+
+                aS.insert(0, s.charAt(i));
+                aT.insert(0, t.charAt(j));
+            } else if (j > 0 && arr[i][j] == arr[i][j - 1] + EMPTY) {
+                aS.insert(0, '-');
                 aT.insert(0, t.charAt(j - 1));
 
+                j--;
+            } else {
+                aS.insert(0, s.charAt(i - 1));
+                aT.insert(0, '-');
+
+                i--;
+            }
+
+           /* if (i > 0 && j > 0 &&
+                    arr[i][j] == arr[i - 1][j - 1] + (s.charAt(i - 1) == t.charAt(j - 1) ? MATCH : DIFF)) {
                 i--; j--;
+
+                aS.insert(0, s.charAt(i));
+                aT.insert(0, t.charAt(j));
             } else if (i > 0) {
                 aS.insert(0, s.charAt(i - 1));
                 aT.insert(0, '-');
@@ -169,13 +175,13 @@ public class Alignment {
                 aT.insert(0, t.charAt(j - 1));
 
                 j--;
-            }
+            }*/
         }
 
         return new AlignmentInfo(maxValue, new Utils.Pair<>(aS.toString(), aT.toString()));
     }
 
-    private static class AlignmentInfo {
+    public static class AlignmentInfo {
         public int value;
         public Utils.Pair<String, String> aligned;
 
