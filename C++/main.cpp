@@ -59,11 +59,7 @@ inline char ChangeToChar(short x){
 }
 
 pair<short, int> FindMostFrequent(map<short, int> &occChange){
-    int *counts = (int *)malloc(4 * sizeof(int));
-    counts[0] = occChange[I_A];
-    counts[1] = occChange[I_C];
-    counts[2] = occChange[I_G];
-    counts[3] = occChange[I_T];
+    int counts[] {occChange[I_A], occChange[I_C], occChange[I_G], occChange[I_T]};
 
     vector<short> bases;
     bases.push_back(I_A);
@@ -92,7 +88,6 @@ pair<short, int> FindMostFrequent(map<short, int> &occChange){
     } else if (counts[3] == max){
         bases.push_back(I_T);
     }
-    free(counts);
 
     return make_pair(bases[rand()%bases.size()], max);
 }
@@ -118,7 +113,7 @@ void FindChanges(string &ref, vector< map<int, vector<info> > > a,
             mostFrequentIns = make_pair(I_NULL, I_NULL);
         } else {
             map<short, int> occIns;
-            for (auto x : a[0][i]){
+            for (auto x : a[1][i]){
                 occIns[x.base]++;
             }
             mostFrequentIns = FindMostFrequent(occIns);

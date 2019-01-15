@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <iostream>
 
 #include "map.h"
 
@@ -13,6 +14,8 @@ using namespace std;
 const int MATCH =  4;
 const int DIFF  = -1;
 const int EMPTY = -2;
+
+int gotovo = 0;
 
 void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps,
         vector< map<int, vector<info> > > &mapInfo){
@@ -33,6 +36,8 @@ void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps,
                 mapInfo[i][entry.first].push_back(entry.second);
             }
         }
+
+        cout << gotovo++ << endl;
     }
 }
 
@@ -74,7 +79,7 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
         if (best.alY[i] == '-'){
             infoMap[2][pos] = info(pos, I_DEL, '0');
             pos++;
-        } else if (best.alX[pos] == '-') {
+        } else if (best.alX[i] == '-') {
             infoMap[1][pos] = info(pos, I_INS, best.alY[i]);
         } else {
             infoMap[0][pos] = info(pos, I_CHA, best.alY[i]);

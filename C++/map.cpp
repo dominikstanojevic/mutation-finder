@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -173,9 +172,6 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
                 max = region.lis[region.start].i;
             }
             if (max - min >= MIN_READS) {
-                cout << "Strand: " << arr[e].r << endl;
-                cout << min << " " << max + k << endl;
-                
                 maps.push_back(mapping_result(min, max + k));
             }
         }
