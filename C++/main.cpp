@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <algorithm>
+#include "align.h"
 #include "utils.h"
 #include "sketch.h"
 #include "map.h"
