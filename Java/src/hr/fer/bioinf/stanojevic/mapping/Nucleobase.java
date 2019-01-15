@@ -28,6 +28,10 @@ public enum Nucleobase {
         return this.reverse;
     }
 
+    public char getLetter() {
+        return letter;
+    }
+
     public static Nucleobase getNucleobase(char c) {
         c = Character.toUpperCase(c);
         switch (c) {
