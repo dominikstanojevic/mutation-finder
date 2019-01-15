@@ -16,10 +16,11 @@ const int MIN_READS = 100;
 const int GAP = 10000;
 
 struct region_data{
+    vector<map_data> lis;
     int start;
     int end;
 
-    region_data(int _start, int _end): start(_start), end(_end) {
+    region_data(vector<map_data> _lis, int _start, int _end): lis(_lis), start(_start), end(_end) {
 
     }
 };
@@ -28,7 +29,7 @@ map<long, set<index_data> > Index(string sequences[], int n_seq, int w, int k){
     map<long, set<index_data> > table;
 
     for (int i = 0; i < n_seq; ++i){
-        vector<minimizer> minimizers = MinimizerSketch(sequences[i], w, k);
+        auto minimizers = MinimizerSketch(sequences[i], w, k);
 
         for (auto m : minimizers){
             if (table.count(m.hash) == 0){
@@ -71,7 +72,7 @@ vector<map_data> LongestIncreasingSubsequence(vector<map_data> &arr, int start, 
 
         while (lo <= hi){
             int mid = (int)ceil((lo + hi) / 2.0);
-            if (Compare(arr[start + mid].i, arr[start + i].i)) {
+            if (Compare(arr[start + M[mid]].i, arr[start + i].i)) {
                 lo = mid + 1;
             } else {
                 hi = mid - 1;
@@ -99,7 +100,7 @@ vector<map_data> LongestIncreasingSubsequence(vector<map_data> &arr, int start, 
 
 vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w, int k, int eps){
     vector<map_data> arr;
-    vector<minimizer> minimizers = MinimizerSketch(q, w, k);
+    auto minimizers = MinimizerSketch(q, w, k);
 
     for (auto m : minimizers){
         if (table.count(m.hash) == 0){
@@ -107,13 +108,12 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
         }
         for (auto ind : table[m.hash]){
             if (m.strand == ind.r){
-                arr.push_back(map_data(ind.t, 0, m.end_position - ind.i, ind.i));
+                arr.push_back(map_data(ind.t, 0, ind.i - m.end_position, ind.i));
             } else {
                 arr.push_back(map_data(ind.t, 1, m.end_position + ind.i, ind.i));
             }
         }
     }
-
     
     sort(arr.begin(), arr.end());
 
@@ -141,6 +141,7 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
             };
             sort(arr.begin() + b, arr.begin() + e + 1, CustomCompare());
             vector<map_data> C;
+            
             if (arr[e].r == 0) {
                 C = LongestIncreasingSubsequence(arr, b, e + 1 - b, CompareLt);
             } else {
@@ -150,11 +151,11 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
             int start = 0;
             for (int end = 1; end < C.size(); ++end){
                 if (abs(C[end].i - C[end - 1].i) >= GAP){
-                    regions.push_back(region_data(start, end));
+                    regions.push_back(region_data(C, start, end));
                     start = end;
                 }
             }
-            regions.push_back(region_data(start, C.size()));
+            regions.push_back(region_data(C, start, C.size()));
             b = e + 1;
         }
 
@@ -165,11 +166,11 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
             }
             int min, max;
             if (arr[e].r == 0){
-                min = arr[region.start].i;
-                max = arr[region.end - 1].i;
+                min = region.lis[region.start].i;
+                max = region.lis[region.end - 1].i;
             } else {
-                min = arr[region.end - 1].i;
-                max = arr[region.start].i;
+                min = region.lis[region.end - 1].i;
+                max = region.lis[region.start].i;
             }
             if (max - min >= MIN_READS) {
                 cout << "Strand: " << arr[e].r << endl;

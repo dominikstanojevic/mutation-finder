@@ -40,7 +40,8 @@ struct map_data{
 
     friend bool operator < (const map_data &a, const map_data &b){
         if (a.r != b.r) return a.r < b.r;
-        return a.c < b.c;
+        if (a.c != b.c) return a.c < b.c;
+        return a.i < b.i;
     }
 };
 
