@@ -36,5 +36,12 @@ int main(int argc, char *argv[]){
 
     auto table = Index(&genome, 1, w, k);
     Map(table, v_reads[0], w, k, eps);
+    
+    string a = "ACACTGCGTGTGAGCGTCATTGA";
+    string b = "GCGCGTG";
+
+    auto result = align(a, b);
+    cout << result.value << endl << result.alX << endl << result.alY << endl;
+    
     return 0;
 }
