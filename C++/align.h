@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <unordered_map>
 
 #include "map.h"
 
@@ -66,26 +67,21 @@ struct info {
 
 struct alignmnent_info {
     int value;
-    string alX;
-    string alY;
+    vector<unordered_map<int, info>> infoMap;
 
     alignmnent_info(){
         value = 0;
-        alX = "";
-        alY = "";
     }
 
-    alignmnent_info(int _value, string _alX, string _alY):
-        value(_value),
-        alX(_alX),
-        alY(_alY) {
-
+    alignmnent_info(int _value):
+        value(_value) {
+            infoMap.resize(3);
     }
 };
 
-void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps, vector< map<int, vector<info> > > &mapInfo);
-void AlignQuery(string &reference, string &query, vector<mapping_result> &regions, vector< map<int, info> > &infoMap);
-alignmnent_info align(string &s, string &t);
+vector<unordered_map<int, vector<info>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps);
+vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, vector<mapping_result> &regions);
+alignmnent_info align(string &s, string &t, int startPos, int end);
 
 
 #endif // ALIGN_H

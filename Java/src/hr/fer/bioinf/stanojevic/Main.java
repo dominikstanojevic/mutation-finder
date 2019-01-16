@@ -26,18 +26,19 @@ public class Main {
     public static int max = -1;
 
     public static void main(String[] args) throws IOException {
-        var ref = readFile(Paths.get("data/ecoli.fasta")).get(0);
+        /*var ref = readFile(Paths.get("data/ecoli.fasta")).get(0);
 
         var queries = readFile(Paths.get("data/ecoli_simulated_reads.fasta"));
         max = queries.stream().mapToInt(q -> q.length()).max().getAsInt();
         System.out.println(queries.size());
+*/
+        //var a = Alignment.alignAll(ref, queries.toArray(new String[queries.size()]), W, K, EPS);
+        //var a = Alignment.alignAll(ref, new String[]{queries.get(1847)}, W, K, EPS);
 
-        var a = Alignment.alignAll(ref, queries.toArray(new String[queries.size()]), W, K, EPS);
+        String ref = String.join("", Files.readAllLines(Paths.get(REF_PATH)));
+        String query = String.join("", Files.readAllLines(Paths.get(Q_PATH)));
 
-        //String ref = String.join("", Files.readAllLines(Paths.get(REF_PATH)));
-        //String query = String.join("", Files.readAllLines(Paths.get(Q_PATH)));
-
-        //var a = Alignment.alignAll(ref, new String[]{query}, W, K, EPS);
+        var a = Alignment.alignAll(ref, new String[]{query}, W, K, EPS);
 
         var changes = findChanges(ref, a);
         StringJoiner sj = new StringJoiner("\n");

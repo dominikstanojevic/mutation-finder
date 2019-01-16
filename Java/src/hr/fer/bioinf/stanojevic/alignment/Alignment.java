@@ -1,12 +1,14 @@
 package hr.fer.bioinf.stanojevic.alignment;
 
-import hr.fer.bioinf.stanojevic.Main;
 import hr.fer.bioinf.stanojevic.Utils;
 import hr.fer.bioinf.stanojevic.mapping.Mapping;
 import hr.fer.bioinf.stanojevic.mapping.MappingResult;
 import hr.fer.bioinf.stanojevic.mapping.Nucleobase;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Alignment {
     public static final int MATCH = 4;
@@ -15,12 +17,7 @@ public class Alignment {
 
     public static int counter = 0;
 
-    public static int[][] array;
-
     public static Map<Integer, List<Info>>[] alignAll(String reference, String[] queries, int w, int k, int eps) {
-        System.out.println(2 * Main.max);
-        array = new int[30_000][30_000];
-
         //0 CHANGE 1 INSERTION 2 DELETION
         Map<Integer, List<Info>>[] info = new HashMap[3];
         info[0] = new HashMap<>();
@@ -38,6 +35,8 @@ public class Alignment {
                     list.add(entry.getValue());
                 }
             }
+
+            System.out.println("Gotov " + counter++);
         }
 
         return info;
@@ -73,10 +72,9 @@ public class Alignment {
             }
         }
 
-        /*for(int i = 0; i < best.aligned.first.length(); i++) {
-            System.out.println(i + " " + best.aligned.first.charAt(i) + " " + best.aligned.second.charAt(i));
-        }
-*/
+//        for(int i = 0; i < best.aligned.first.length(); i++) {
+//            System.out.println((bestStart + i) + " " + best.aligned.first.charAt(i) + " " + best.aligned.second.charAt(i));
+//        }
 
         if (best == null) {
             return info;
@@ -106,7 +104,7 @@ public class Alignment {
             }
         }
 
-        System.out.println("Gotov " + counter++);
+
         return info;
     }
 
@@ -114,6 +112,8 @@ public class Alignment {
     public static AlignmentInfo align(String s, String t) {
         int rows = s.length();
         int cols = t.length();
+
+        int[][] array = new int[rows + 1][cols + 1];
 
         for (int j = 1; j <= cols; j++) {
             array[0][j] = j * EMPTY;
@@ -190,6 +190,8 @@ public class Alignment {
 
                 j--;
             }*/
+
+            System.out.println(i + " " + j);
         }
 
         return new AlignmentInfo(maxValue, new Utils.Pair<>(aS.toString(), aT.toString()));

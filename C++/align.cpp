@@ -6,6 +6,8 @@
 #include <cstring>
 #include <vector>
 #include <iostream>
+#include <climits>
+#include <unordered_map>
 
 #include "map.h"
 
@@ -17,16 +19,17 @@ const int EMPTY = -2;
 
 int gotovo = 0;
 
-void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps,
-        vector< map<int, vector<info> > > &mapInfo){
-    mapInfo.resize(3);
+vector<int> arr;
+int maxArr = 0;
+
+vector<unordered_map<int, vector<info>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps){
+    vector<unordered_map<int, vector<info>>> mapInfo {3};
 
     auto table = Index(&reference, 1, w, k);
     for (auto query : queries){
         auto regions = Map(table, query, w, k, eps);
 
-        vector< map<int, info> > result; 
-        AlignQuery(reference, query, regions, result);
+        auto result = AlignQuery(reference, query, regions);
 
         for (int i = 0; i < 3; ++i){
             for (auto entry : result[i]){
@@ -39,12 +42,12 @@ void AlignAll(string &reference, vector<string> &queries, int w, int k, int eps,
 
         cout << gotovo++ << endl;
     }
+
+    return mapInfo;
 }
 
-void AlignQuery(string &reference, string &query, vector<mapping_result> &regions,
-        vector< map<int, info> > &infoMap){
-    infoMap.resize(3);
-    alignmnent_info best;
+vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, vector<mapping_result> &regions){
+    alignmnent_info best {INT_MIN};
     int bestStart = -1;
 
     for (auto region : regions) {
@@ -52,6 +55,7 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
 
         int len = region.end - region.start;
         int diff = (query.size() - len) / 2;
+        diff = 0;
 
         int start = diff > 0 ? (region.start - diff) : region.start;
         if (start < 0) start = 0;
@@ -59,9 +63,8 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
         int end = diff > 0 ? (region.end + diff) : region.end;
         if (end > reference.size()) end = reference.size();
 
-        string str = reference.substr(start, end-start);
-        alignmnent_info result = align(str, query);
-        if (best.alX == "" || best.value < result.value){
+        alignmnent_info result = align(reference, query, start, end);
+        if (best.value < result.value){
             best = result;
             bestStart = start;
         }
@@ -70,97 +73,91 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
     }
     //cout << endl;
 
-    if (best.alX == "") {
-        return;
-    }
+    cout << best.infoMap[0].size() << " " << best.infoMap[1].size() << " " << best.infoMap[2].size() << endl;
 
-    int i = 0;
-    while (best.alY[i] == '-') ++i;
-    int j = best.alY.size() - 1;
-    while (best.alY[j] == '-') --j;
-
-    int pos = bestStart + i;
-    for (; i < j; ++i){
-        if (best.alY[i] == '-'){
-            infoMap[2][pos] = info(pos, I_DEL, '0');
-            pos++;
-        } else if (best.alX[i] == '-') {
-            infoMap[1][pos] = info(pos, I_INS, best.alY[i]);
-        } else {
-            infoMap[0][pos] = info(pos, I_CHA, best.alY[i]);
-            pos++;
-        }
-    }
+    return best.infoMap;
 }
 
-alignmnent_info align(string &s, string &t){
-    int rows = s.size() + 1;
+alignmnent_info align(string &s, string &t, int startPos, int end){
+    int rows = end - startPos + 1;
     int cols = t.size() + 1;
+    int elems = rows * cols;
 
-    int *array = (int*)malloc(sizeof(int) * rows * cols);
+    if (elems > maxArr) {
+        arr.resize(elems);
+        maxArr = elems;
+    }
     
     for (int j = 1; j < cols; ++j){
-        array[j] = j * EMPTY;
+        arr[j] = j * EMPTY;
     }
 
     for (int i = 1; i < rows; ++i){
-        array[i * cols] = 0;
+        arr[i * cols] = 0;
         for (int j = 1; j < cols; ++j){
-            int match = (s[i-1] == t[j-1]) ? MATCH : DIFF;
-            match += array[(i-1) * cols + j-1];
+            int match = (s[startPos + i-1] == t[j-1]) ? MATCH : DIFF;
+            match += arr[(i-1) * cols + j-1];
             
-            int del = array[(i-1) * cols + j] + EMPTY;
-            int insert = array[i * cols + j-1] + EMPTY;
+            int del = arr[(i-1) * cols + j] + EMPTY;
+            int insert = arr[i * cols + j-1] + EMPTY;
 
-            array[i * cols + j] = max(max(match, del), insert);
+            arr[i * cols + j] = max(max(match, del), insert);
         }
     }
 
     int i = 0;
     int j = cols - 1;
-    int maxValue = array[j];
+    int maxValue = arr[j];
 
     for (int e = 1; e < rows; ++e){
-        if (array[e*cols + j] > maxValue){
+        if (arr[e*cols + j] > maxValue){
             i = e;
-            maxValue = array[e*cols + j];
+            maxValue = arr[e*cols + j];
         }
     }
 
-    string aS = "", aT = "";
-    aS = s.substr(i, rows-1-i);
-    for (int e = 0, end = rows - 1 - i; e < end; ++e){
-        aT.append("-");
-    }
+    alignmnent_info al_info {maxValue};
+    auto& infoMap = al_info.infoMap;
 
-    string raS = "", raT = "";
+    unordered_map<int, info> temp;
+    bool last = false;
 
+    int pos = startPos + i - 1;
+    bool first = true;
     while (i > 0 || j > 0){
         if ((i > 0) && (j > 0) &&
-                (array[i*cols + j] == (array[(i-1)*cols + j-1] + ((s[i-1] == t[j-1]) ? MATCH : DIFF)))){
-            raS += s[i-1];
-            raT += t[j-1];
+                (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[j-1]) ? MATCH : DIFF)))){
+            infoMap[0][pos] = info(pos, I_CHA, t[j - 1]);
+            if (last) {
+                infoMap[2].insert(temp.begin(), temp.end());
+                temp.clear();
+            }
 
-            i--; j--;
-        } else if ((j > 0) && (array[i*cols + j] == (array[i*cols + j-1] + EMPTY))) {
-            raS.append("-");
-            raT += t[j-1];
+            i--; j--; pos--; 
+            first = last = false;
+        } else if ((j > 0) && (arr[i*cols + j] == (arr[i*cols + j-1] + EMPTY))) {
+            infoMap[1][pos] = info(pos, I_INS, t[j - 1]);
+            if (last) {
+                infoMap[2].insert(temp.begin(), temp.end());
+                temp.clear();
+            }
 
             j--;
+            first = last = false;
         } else {
-            raS += s[i-1];
-            raT.append("-");
+            if (first) {
+                i--;
+                pos--;
+                continue;
+            }
+
+            temp[pos] = info(pos, I_DEL, '0');
 
             i--;
+            pos--;
+            last = true;
         }
     }
 
-    reverse(raS.begin(), raS.end());
-    reverse(raT.begin(), raT.end());
-
-    aS = raS + aS;
-    aT = raT + aT;
-
-    free(array);
-    return alignmnent_info(maxValue, aS, aT);
+    return al_info;
 }

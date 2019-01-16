@@ -1,5 +1,5 @@
 GCC=        g++
-CFLAGS=		-g -w -O2
+CFLAGS=		-g -w -O3
 PROG=		mutation_finder
 LIBS=		-lm -lz -lpthread
 OBJS=       utils.o sketch.o map.o align.o

@@ -92,7 +92,7 @@ pair<short, int> FindMostFrequent(map<short, int> &occChange){
     return make_pair(bases[rand()%bases.size()], max);
 }
 
-void FindChanges(string &ref, vector< map<int, vector<info>>> a, 
+void FindChanges(string &ref, vector<unordered_map<int, vector<info>>> a, 
         vector<info> &changes){
     
     for(int i = 0; i < ref.size(); ++i) {
@@ -172,8 +172,7 @@ int main(int argc, char *argv[]){
     vector<string> v_reads;
     ReadFASTAFile(f_reads, v_reads);
 
-    vector<map<int, vector<info> > > a;
-    AlignAll(genome, v_reads, w, k, eps, a);
+    auto a = AlignAll(genome, v_reads, w, k, eps);
 
     vector<info> changes;
     FindChanges(genome, a, changes);
