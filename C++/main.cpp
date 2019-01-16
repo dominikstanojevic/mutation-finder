@@ -92,7 +92,7 @@ pair<short, int> FindMostFrequent(map<short, int> &occChange){
     return make_pair(bases[rand()%bases.size()], max);
 }
 
-void FindChanges(string &ref, vector< map<int, vector<info> > > a, 
+void FindChanges(string &ref, vector< map<int, vector<info>>> a, 
         vector<info> &changes){
     
     for(int i = 0; i < ref.size(); ++i) {

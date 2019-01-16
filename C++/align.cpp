@@ -48,8 +48,10 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
     int bestStart = -1;
 
     for (auto region : regions) {
+        //cout << region.start << " " << region.end << " ";
+
         int len = region.end - region.start;
-        int diff = query.size() - len;
+        int diff = (query.size() - len) / 2;
 
         int start = diff > 0 ? (region.start - diff) : region.start;
         if (start < 0) start = 0;
@@ -63,7 +65,10 @@ void AlignQuery(string &reference, string &query, vector<mapping_result> &region
             best = result;
             bestStart = start;
         }
+
+        //cout << gotovo << endl;
     }
+    //cout << endl;
 
     if (best.alX == "") {
         return;
@@ -94,10 +99,12 @@ alignmnent_info align(string &s, string &t){
 
     int *array = (int*)malloc(sizeof(int) * rows * cols);
     
-    for (int j = 0; j < cols; ++j){
-        array[j] = 0;
+    for (int j = 1; j < cols; ++j){
+        array[j] = j * EMPTY;
     }
+
     for (int i = 1; i < rows; ++i){
+        array[i * cols] = 0;
         for (int j = 1; j < cols; ++j){
             int match = (s[i-1] == t[j-1]) ? MATCH : DIFF;
             match += array[(i-1) * cols + j-1];
@@ -129,8 +136,7 @@ alignmnent_info align(string &s, string &t){
     string raS = "", raT = "";
 
     while (i > 0 || j > 0){
-        if ((i > 0) && 
-                (j > 0) &&
+        if ((i > 0) && (j > 0) &&
                 (array[i*cols + j] == (array[(i-1)*cols + j-1] + ((s[i-1] == t[j-1]) ? MATCH : DIFF)))){
             raS += s[i-1];
             raT += t[j-1];
