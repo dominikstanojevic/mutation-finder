@@ -13,34 +13,45 @@
 
 using namespace std;
 
-const int MATCH =  4;
+const int MATCH =  1;
 const int DIFF  = -1;
 const int EMPTY = -2;
 
 int gotovo = 0;
 
-vector<int> arr;
-int maxArr = 0;
+vector<unordered_map<int, unordered_map<short, int>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps){
+    vector<unordered_map<int, unordered_map<short, int>>> mapInfo {3};
 
-vector<unordered_map<int, vector<info>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps){
-    vector<unordered_map<int, vector<info>>> mapInfo {3};
-
+    int n_queries = 10000;
+    vector<unordered_map<int, info>> results[n_queries];
     auto table = Index(&reference, 1, w, k);
-    for (auto query : queries){
+
+    #pragma omp parallel for num_threads(7)
+    for (int i = 0; i < n_queries; i++){
+        auto &query = queries[i];
         auto regions = Map(table, query, w, k, eps);
 
         auto result = AlignQuery(reference, query, regions);
 
-        for (int i = 0; i < 3; ++i){
-            for (auto entry : result[i]){
-                if (mapInfo[i].count(entry.first) == 0){
-                    mapInfo[i][entry.first] = vector<info>();
-                }
-                mapInfo[i][entry.first].push_back(entry.second);
-            }
-        }
+        #pragma omp critical
+        {
+            for (int i = 0; i < 3; i++) {
+                auto &map_option = mapInfo[i];
+                for (auto entry : result[i]) {
+                    if (map_option.count(entry.first) == 0) {
+                        map_option[entry.first] = unordered_map<short, int>();
+                    }
 
-        cout << gotovo++ << endl;
+                    if(map_option[entry.first].count(entry.second.base) == 0) {
+                        map_option[entry.first][entry.second.base] = 1;
+                    } else {
+                        map_option[entry.first][entry.second.base] += 1;
+                    }
+                }
+            }
+
+            //cout << gotovo++ << endl;
+        }
     }
 
     return mapInfo;
@@ -51,7 +62,6 @@ vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, ve
     int bestStart = -1;
 
     for (auto region : regions) {
-        //cout << region.start << " " << region.end << " ";
 
         int len = region.end - region.start;
 
@@ -61,20 +71,12 @@ vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, ve
         int end = region.end;
         if (end > reference.size()) end = reference.size();
 
-        if (region.maxQ - region.minQ > len) {
-            cout << "JEBIGA" << endl;
-            cout << start << " " << end << " " << region.minQ << " " << region.maxQ << endl;
-        }
-
         alignmnent_info result = align(reference, query, start, end, region.minQ, region.maxQ);
         if (best.value < result.value){
             best = result;
             bestStart = start;
         }
-
-        //cout << gotovo << endl;
     }
-    //cout << endl;
 
     return best.infoMap;
 }
@@ -84,17 +86,18 @@ alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, i
     int cols = endQ - startQ + 1;
     int elems = rows * cols;
 
-    if (elems > maxArr) {
-        arr.resize(elems);
-        maxArr = elems;
-    }
+    int *arr = (int *) malloc(sizeof(int) * elems);
+    char *arr = (char *) malloc(sizeof(char) * elems);
     
+    int iMax = 0, jMax = 0, M = 0;
     for (int j = 1; j < cols; ++j){
-        arr[j] = j * EMPTY;
+        arr[j] = 0;
+    }
+    for (int i = 0; i < rows; ++i) {
+        arr[i * cols] = 0;
     }
 
     for (int i = 1; i < rows; ++i){
-        arr[i * cols] = 0;
         for (int j = 1; j < cols; ++j){
             int match = (s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF;
             match += arr[(i-1) * cols + j-1];
@@ -102,63 +105,43 @@ alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, i
             int del = arr[(i-1) * cols + j] + EMPTY;
             int insert = arr[i * cols + j-1] + EMPTY;
 
-            arr[i * cols + j] = max(max(match, del), insert);
+            arr[i * cols + j] = max(max(max(match, del), insert), 0);
+            if (arr[i * cols + j] > M) {
+                iMax = i; jMax = j; M = arr[i * cols + j];
+            }
         }
     }
 
-    int i = 0;
-    int j = cols - 1;
-    int maxValue = arr[j];
-
-    for (int e = 1; e < rows; ++e){
-        if (arr[e*cols + j] > maxValue){
-            i = e;
-            maxValue = arr[e*cols + j];
-        }
-    }
+    int i = iMax; //int i = rows - 1; 
+    int j = jMax; //int j = cols - 1;
+    int maxValue = M; //int maxValue = arr[i * cols + j];
 
     alignmnent_info al_info {maxValue};
     auto& infoMap = al_info.infoMap;
 
-    unordered_map<int, info> temp;
-    bool last = false;
-
     int pos = startPos + i - 1;
-    bool first = true;
     while (i > 0 || j > 0){
+        if (arr[i*cols + j] == 0) {
+            break;
+        }
+
         if ((i > 0) && (j > 0) &&
                 (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF)))){
             infoMap[0][pos] = info(pos, I_CHA, t[startQ + j - 1]);
-            if (last) {
-                infoMap[2].insert(temp.begin(), temp.end());
-                temp.clear();
-            }
 
             i--; j--; pos--; 
-            first = last = false;
         } else if ((j > 0) && (arr[i*cols + j] == (arr[i*cols + j-1] + EMPTY))) {
-            infoMap[1][pos] = info(pos, I_INS, t[startQ + j - 1]);
-            if (last) {
-                infoMap[2].insert(temp.begin(), temp.end());
-                temp.clear();
-            }
-
+            infoMap[1][pos] = info(pos + 1, I_INS, t[startQ + j - 1]);
             j--;
-            first = last = false;
         } else {
-            if (first) {
-                i--;
-                pos--;
-                continue;
-            }
 
-            temp[pos] = info(pos, I_DEL, '0');
+            infoMap[2][pos] = info(pos, I_DEL, '0');
 
             i--;
             pos--;
-            last = true;
         }
     }
 
+    free(arr);
     return al_info;
 }
