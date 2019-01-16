@@ -48,8 +48,11 @@ struct map_data{
 struct mapping_result{
     int start;
     int end;
+    int minQ;
+    int maxQ;
 
-    mapping_result(int _start, int _end): start(_start), end(_end) {
+    mapping_result(int _start, int _end, int _minQ, int _maxQ): 
+    start(_start), end(_end), minQ(_minQ), maxQ(_maxQ) {
 
     }
 

@@ -42,7 +42,7 @@ map<long, set<index_data> > Index(string sequences[], int n_seq, int w, int k){
     return table;
 }
 
-int GetQPosition(const map_data &x){
+inline int GetQPosition(const map_data &x){
     if (x.r == 0){
         return x.i - x.c;
     } else {
@@ -164,6 +164,10 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
                 continue;
             }
             int min, max;
+
+            int minQ = GetQPosition(region.lis[region.start]);
+            int maxQ = GetQPosition(region.lis[region.end - 1]);
+
             if (arr[e].r == 0){
                 min = region.lis[region.start].i;
                 max = region.lis[region.end - 1].i;
@@ -172,7 +176,7 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
                 max = region.lis[region.start].i;
             }
             if (max - min >= MIN_READS) {
-                maps.push_back(mapping_result(min, max + k));
+                maps.push_back(mapping_result(min, max + k, minQ, maxQ + k));
             }
         }
     }

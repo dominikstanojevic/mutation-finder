@@ -54,16 +54,19 @@ vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, ve
         //cout << region.start << " " << region.end << " ";
 
         int len = region.end - region.start;
-        int diff = (query.size() - len) / 2;
-        diff = 0;
 
-        int start = diff > 0 ? (region.start - diff) : region.start;
+        int start = region.start;
         if (start < 0) start = 0;
 
-        int end = diff > 0 ? (region.end + diff) : region.end;
+        int end = region.end;
         if (end > reference.size()) end = reference.size();
 
-        alignmnent_info result = align(reference, query, start, end);
+        if (region.maxQ - region.minQ > len) {
+            cout << "JEBIGA" << endl;
+            cout << start << " " << end << " " << region.minQ << " " << region.maxQ << endl;
+        }
+
+        alignmnent_info result = align(reference, query, start, end, region.minQ, region.maxQ);
         if (best.value < result.value){
             best = result;
             bestStart = start;
@@ -73,14 +76,12 @@ vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, ve
     }
     //cout << endl;
 
-    cout << best.infoMap[0].size() << " " << best.infoMap[1].size() << " " << best.infoMap[2].size() << endl;
-
     return best.infoMap;
 }
 
-alignmnent_info align(string &s, string &t, int startPos, int end){
+alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, int endQ){
     int rows = end - startPos + 1;
-    int cols = t.size() + 1;
+    int cols = endQ - startQ + 1;
     int elems = rows * cols;
 
     if (elems > maxArr) {
@@ -95,7 +96,7 @@ alignmnent_info align(string &s, string &t, int startPos, int end){
     for (int i = 1; i < rows; ++i){
         arr[i * cols] = 0;
         for (int j = 1; j < cols; ++j){
-            int match = (s[startPos + i-1] == t[j-1]) ? MATCH : DIFF;
+            int match = (s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF;
             match += arr[(i-1) * cols + j-1];
             
             int del = arr[(i-1) * cols + j] + EMPTY;
@@ -126,8 +127,8 @@ alignmnent_info align(string &s, string &t, int startPos, int end){
     bool first = true;
     while (i > 0 || j > 0){
         if ((i > 0) && (j > 0) &&
-                (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[j-1]) ? MATCH : DIFF)))){
-            infoMap[0][pos] = info(pos, I_CHA, t[j - 1]);
+                (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF)))){
+            infoMap[0][pos] = info(pos, I_CHA, t[startQ + j - 1]);
             if (last) {
                 infoMap[2].insert(temp.begin(), temp.end());
                 temp.clear();
@@ -136,7 +137,7 @@ alignmnent_info align(string &s, string &t, int startPos, int end){
             i--; j--; pos--; 
             first = last = false;
         } else if ((j > 0) && (arr[i*cols + j] == (arr[i*cols + j-1] + EMPTY))) {
-            infoMap[1][pos] = info(pos, I_INS, t[j - 1]);
+            infoMap[1][pos] = info(pos, I_INS, t[startQ + j - 1]);
             if (last) {
                 infoMap[2].insert(temp.begin(), temp.end());
                 temp.clear();

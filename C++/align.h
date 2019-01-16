@@ -81,7 +81,7 @@ struct alignmnent_info {
 
 vector<unordered_map<int, vector<info>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps);
 vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, vector<mapping_result> &regions);
-alignmnent_info align(string &s, string &t, int startPos, int end);
+alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, int endQ);
 
 
 #endif // ALIGN_H

@@ -3,6 +3,7 @@ package hr.fer.bioinf.stanojevic;
 import hr.fer.bioinf.stanojevic.alignment.Alignment;
 import hr.fer.bioinf.stanojevic.alignment.Info;
 import hr.fer.bioinf.stanojevic.alignment.Option;
+import hr.fer.bioinf.stanojevic.mapping.Mapping;
 import hr.fer.bioinf.stanojevic.mapping.Nucleobase;
 
 import java.io.IOException;
@@ -26,6 +27,14 @@ public class Main {
     public static int max = -1;
 
     public static void main(String[] args) throws IOException {
+        String ref = String.join("", Files.readAllLines(Paths.get(REF_PATH)));
+        String query = String.join("", Files.readAllLines(Paths.get(Q_PATH)));
+
+        var table = Mapping.index(new String[]{ref}, W, K);
+        Mapping.map(table, query, W, K, EPS);
+    }
+
+    public static void main3(String[] args) throws IOException {
         /*var ref = readFile(Paths.get("data/ecoli.fasta")).get(0);
 
         var queries = readFile(Paths.get("data/ecoli_simulated_reads.fasta"));

@@ -145,6 +145,11 @@ public class Mapping {
             for(MapData[] C : regions) {
                 if(C.length >= MIN_COUNT) {
                     int min, max;
+
+                    int minQ, maxQ;
+                    minQ = getQPosition(C[0].c, C[0].i, C[0].r);
+                    maxQ = getQPosition(C[C.length - 1].c, C[C.length - 1].i, C[C.length - 1].r);
+
                     if (arr.get(e).r == 0) {
                         min = C[0].i;
                         max = C[C.length - 1].i;
@@ -154,12 +159,13 @@ public class Mapping {
                     }
 
                     if (max - min >= MIN_READS) {
-                        //System.out.println("Strand: " + arr.get(e).r);
-                        //System.out.println(min + " " + (max + k));
+                        System.out.println("Strand: " + arr.get(e).r);
+                        System.out.println("Ref: " + min + " " + (max + k));
+                        System.out.println("Que: " + minQ + " " + (maxQ + k));
 
                         maps.add(new MappingResult(min, max + k));
 
-                        //System.out.println();
+                        System.out.println();
                     }
                 }
             }
