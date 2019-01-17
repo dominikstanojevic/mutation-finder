@@ -11,7 +11,7 @@
 
 using namespace std;
 
-int MIN_COVERAGE = 8;
+int MIN_COVERAGE = 6;
 
 inline short CharToBaseShort(char x){
     switch(x) {
