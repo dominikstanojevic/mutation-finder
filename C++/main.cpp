@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int MIN_COVERAGE = 10;
+int MIN_COVERAGE = 8;
 
 inline short CharToBaseShort(char x){
     switch(x) {
@@ -111,9 +111,6 @@ void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int
             mostFrequentIns = make_pair(I_NULL, I_NULL);
         } else {
             mostFrequentIns = FindMostFrequent(a[1][i]);
-            for (auto x : a[1][i]){
-                cout << x.first << " " << x.second << endl;
-            }
             mostFrequentIns.second *= 2;
             //cout << mostFrequentIns.first << ":" << mostFrequentIns.second << endl;
         }
@@ -123,12 +120,15 @@ void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int
             delSize = a[2][i][-1];
         }
 
-        cout << i << " " << mostFrequentChange.second << " " << mostFrequentIns.second << " " << delSize << endl;
+        cout << i << ref[i] << " " << mostFrequentChange.second << ChangeToChar(mostFrequentChange.first) << " ";
+        cout << mostFrequentIns.second << " " << delSize << endl;
 
         if (mostFrequentChange.second <= 0 && mostFrequentIns.second <= 0 && delSize == 0) {
             continue;
         }
-        if (mostFrequentChange.second + mostFrequentIns.second + delSize < MIN_COVERAGE){
+
+        int threshold = mostFrequentIns.second + delSize + (ref[i] == ChangeToChar(mostFrequentChange.first) ? 0 : mostFrequentChange.second);
+        if (threshold < MIN_COVERAGE){
             continue;
         }
 
@@ -139,11 +139,21 @@ void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int
         } else if (mostFrequentIns.second > mostFrequentChange.second && mostFrequentIns.second > delSize) {
             changes.push_back(info(i, I_INS, mostFrequentIns.first));
         } else if (delSize > mostFrequentChange.second && delSize > mostFrequentIns.second) {
+            if (changes.size() > 0 &&
+                (changes.back().pos == i-1) && changes.back().option == I_DEL) {
+                changes.pop_back();
+            }
+            
             changes.push_back(info(i, I_DEL, I_NULL));
         } else if (delSize == mostFrequentIns.second) {
             if (rand() % 2 == 0) {
                 changes.push_back(info(i, I_INS, mostFrequentIns.first));
             } else {
+                if (changes.size() > 0 && 
+                (changes.back().pos == i-1) && changes.back().option == I_DEL) {
+                    changes.pop_back();
+                }
+
                 changes.push_back(info(i, I_DEL, I_NULL));
             }
         } 
