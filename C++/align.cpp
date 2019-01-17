@@ -56,7 +56,7 @@ vector<unordered_map<int, unordered_map<short, int>>> AlignAll(string &reference
 
         #pragma omp critical
         {
-            cout << gotovo++ << endl;
+            //cout << gotovo++ << endl;
         }
     }
 

@@ -11,6 +11,8 @@
 
 using namespace std;
 
+const int MIN_COVERAGE = 10;
+
 inline short CharToBaseShort(char x){
     switch(x) {
             case 'a':
@@ -109,6 +111,11 @@ void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int
             mostFrequentIns = make_pair(I_NULL, I_NULL);
         } else {
             mostFrequentIns = FindMostFrequent(a[1][i]);
+            for (auto x : a[1][i]){
+                cout << x.first << " " << x.second << endl;
+            }
+            mostFrequentIns.second *= 2;
+            //cout << mostFrequentIns.first << ":" << mostFrequentIns.second << endl;
         }
 
         int delSize = 0;
@@ -119,6 +126,9 @@ void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int
         cout << i << " " << mostFrequentChange.second << " " << mostFrequentIns.second << " " << delSize << endl;
 
         if (mostFrequentChange.second <= 0 && mostFrequentIns.second <= 0 && delSize == 0) {
+            continue;
+        }
+        if (mostFrequentChange.second + mostFrequentIns.second + delSize < MIN_COVERAGE){
             continue;
         }
 
