@@ -107,6 +107,36 @@ vector<unordered_map<int, info>> AlignRegion(string &reference, string &query, m
     }
 }
 
+inline void emit_change(unordered_map<int, info> &map, int &pos, string &t, int startQ, int &i, int &j) {
+    map[pos] = info(pos, I_CHA, t[startQ + j - 1]);
+    i--; j--; pos--; 
+}
+inline void emit_ins(unordered_map<int, info> &map, int pos, string &t, int startQ, int &j) {
+    map[pos+1] = info(pos + 1, I_INS, t[startQ + j - 1]);
+    j--;
+}
+inline void emit_del(unordered_map<int, info> &map, int &pos, string &t, int &i) {
+    map[pos] = info(pos, I_DEL, '0');
+    i--; pos--;
+}
+
+inline bool check_diag(int *arr, string &s, string &t, int i, int j, int cols, int startPos, int startQ) {
+    if ((i > 0) && (j > 0) &&
+        (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF)))){
+            return true;
+        } else return false;
+}
+
+inline bool check_up(int *arr, int i, int j, int cols) {
+    if ((i > 0) && (arr[i*cols + j] == (arr[(i-1)*cols + j] + EMPTY))) return true;
+    return false;
+}
+
+inline bool check_left(int *arr, int i, int j, int cols) {
+    if ((j > 0) && (arr[i*cols + j] == (arr[i*cols + j - 1] + EMPTY))) return true;
+    return false;
+}
+
 alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, int endQ){
     int rows = end - startPos + 1;
     int cols = endQ - startQ + 1;
@@ -146,18 +176,75 @@ alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, i
     
     int pos = startPos + i - 1;
     while (j > 0){ 
-        if ((i > 0) && (j > 0) &&
+        bool diag = check_diag(arr, s, t, i, j, cols, startPos, startQ);
+        bool up = check_up(arr, i, j, cols);
+        bool left = check_left(arr, i, j, cols);
+
+        if (diag && up && left) {
+            switch (rand() % 3) {
+                case 0:
+                    emit_change(infoMap[0], pos, t, startQ, i, j);
+                    break;
+                case 1:
+                    emit_ins(infoMap[1], pos, t, startQ, j);
+                    break;
+                case 2:
+                    emit_del(infoMap[2], pos, t, i);
+                    break;
+            }
+        } else if (diag && up) {
+            switch (rand() % 2) {
+                case 0:
+                    emit_change(infoMap[0], pos, t, startQ, i, j);
+                    break;
+                case 1:
+                    emit_del(infoMap[2], pos, t, i);
+                    break;
+            }
+        } else if (diag && left) {
+            switch (rand() % 2) {
+                case 0:
+                    emit_change(infoMap[0], pos, t, startQ, i, j);
+                    break;
+                case 1:
+                    emit_ins(infoMap[1], pos, t, startQ, j);
+                    break;
+            }
+        } else if (up && left) {
+            switch (rand() % 2) {
+                case 0:
+                    emit_ins(infoMap[1], pos, t, startQ, j);
+                    break;
+                case 1:
+                    emit_del(infoMap[2], pos, t, i);
+                    break;
+            }
+        } else if (diag) emit_change(infoMap[0], pos, t, startQ, i, j);
+        else if (left)  emit_ins(infoMap[1], pos, t, startQ, j);
+        else emit_del(infoMap[2], pos, t, i);
+
+        /* if ((i > 0) && (j > 0) &&
                 (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF)))){
             infoMap[0][pos] = info(pos, I_CHA, t[startQ + j - 1]);
 
             i--; j--; pos--; 
         } else if ((i > 0) && (arr[i*cols + j] == (arr[(i-1)*cols + j] + EMPTY))) {
-            infoMap[2][pos] = info(pos, I_DEL, '0');
-            i--; pos--;
+            if ((j > 0) && (arr[i*cols + j] == (arr[i*cols + j - 1] + EMPTY))) {
+                if (rand() % 2 == 0) {
+                    infoMap[2][pos] = info(pos, I_DEL, '0');
+                    i--; pos--;
+                } else {
+                    infoMap[1][pos+1] = info(pos + 1, I_INS, t[startQ + j - 1]);
+                    j--;
+                }
+            } else {
+                infoMap[2][pos] = info(pos, I_DEL, '0');
+                i--; pos--;
+            }
         } else {
             infoMap[1][pos+1] = info(pos + 1, I_INS, t[startQ + j - 1]);
             j--;
-        }
+        } */
     }
 
     free(arr);
