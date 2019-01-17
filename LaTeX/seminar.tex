@@ -1,0 +1,128 @@
+\documentclass[times, utf8, seminar, numeric]{fer}
+\usepackage{booktabs}
+
+\begin{document}
+
+% TODO: Navedite naslov rada.
+\title{Pronalazak mutacija pomoću treće generacije sekvenciranja}
+
+% TODO: Navedite svoje ime i prezime.
+\author{Dominik Stanojević, Kristijan Vulinović}
+
+% TODO: Navedite ime i prezime mentora.
+\voditelj{Robert Vaser, mag. ing.}
+
+\maketitle
+
+\tableofcontents
+
+\chapter{Uvod}
+Cilj projekta je određivanje mutacija koje su se dogodile na referentnom genomu.
+U cijelosti je poznat referentni genom, te su također poznate i sekvence očitanja mutiranog genoma.
+Očitanja je potrebno mapirati na referentni genom, poravnati ih i odrediti mutirani genom.
+Usporedbom mutiranog genoma s referentnim određuju se mutacije.
+Moguće mutacije su:
+\begin{itemize}
+\item supstitucija (jedna nukleotidna baza referentnog genoma zamijenjena je drugom)
+\item umetanje (u referentni genom je umetnuta jedna nukleotidna baza)
+\item brisanje (iz referentnog genoma je izbrisana jedna nukleotidna baza)
+\end{itemize}
+
+\chapter{Implementacija}
+\section{Mapiranje sekvence}
+Kako je referentni genom dugačak, potrebno je odrediti područje unutar istoga na kojemu će se raditi poravnanje sa očitanim sekvencama.
+Za tu potrebu koriste se minimizeri, koji su opisani u radu \cite{minimizer}.
+Minimizer je podniz genoma određene duljine $k$ ($k$-mer).
+U općem slučaju postoji velik broj $k$-mera (jednako duljini genoma), zbog čega se odabiru samo određeni od njih.
+Odabir se vrši na način da se promatra $w$ uzastopnih $k$-mera te se od njih sprema samo onaj najmanji (minimizer).
+U radu \cite{minimap} se vrijednost $k$-mera dodatno hashira te se oni međusobno uspoređuju prema veličini njihove hash vrijednosti.
+Pogledajmo sljedeći primjer:
+
+\begin{tabular}{ccccccccccccccc }
+    C&G&T&A&G&T&C&G&A&T&G&A&C&G&T\\
+\end{tabular}
+
+Uz $k$-mere veličine $5$ i gledanje $4$ uzastopna $k$-mera, i poredak $A<C<G<T$, prvi minimizer se dobije kao što je prikazano podebljano u nastavku:
+
+\begin{tabular}{ccccccccccccccc }
+    C&G&T&A&G&T&C&G&A&T&G&A&C&G&T\\ \hline
+    C&G&T&A&G&&&&&&&&&&\\
+    &G&T&A&G&T&&&&&&&&&\\
+    &&T&A&G&T&C&&&&&&&&\\
+    &&&\textbf{A}&\textbf{G}&\textbf{T}&\textbf{C}&\textbf{G}&&&&&&&\\
+\end{tabular}
+
+Prema postupku korištenom u \cite{minimap} se nakon određivanja minimizera radi indeksiranje istih, gdje se minimizeri spremaju u hash tablicu, gjde je hash vrijednost minimizera ključ.
+Na kraju je potrebno sekvencu upita mapirati na određeni dio referentnog genoma, što se radi na način da se za referentni genom pronađu svi minimizeri, te se oni uspoređuju sa svim minimizerima iz sekvenciranog genoma.
+Gledaju se oni minimizeri sekveniranog genoma cija hash vrijednost postoji u minimizerima referentnog genoma.
+Ti se minimizeri sortiraju prema poziciji u genomu te se potom traži najdulji rastući podniz u njima.
+U tom se podnizu nalaze minimizeri koji se preklapaju u sekvenciranom djelu genoma i referentnom te oni određuju poziciju u referentnom genomu na kojoj se treba vršiti poravnanje.
+Točna pozicija određena je minimalnom i maksimalnom pozicijom minimizera u najduljem rastućem podnizu.
+
+\section{Poravnanje}
+Nakon što je sekvencirani uzorak mapiran na određeno područje referentnog genoma, potrebno ih je poravnati.
+Za to je korišten Needleman-Wunsch algoritam, opisan u knjizi \cite{skripta}.
+Algoritam radi na način da definira vrijednost poravnanja $2$ genoma na sljedeći način:
+
+\[
+    V(i, j) = 
+    \begin{cases}
+        0,    & i = 0 \wedge j = 0\\
+        d * i,& j = 0              \\
+        d * j,& i = 0              \\
+        max 
+        \begin{cases}
+            V(i-1, j-1) + w(s_i, t_j)\\
+            V(i-1, j) + d\\
+            V(i,j-1) + d\\
+        \end{cases}
+        & \text{inače}\\
+    \end{cases}
+\]
+
+Algoritam također definira i $3$ parametra koja je potrebno odabrati, a to su cijene slaganja, neslaganja i praznina.
+Nakon što se na ovaj način popuni matrica sa podatcima o sličnosti, pronalazi se najveća vrijednost u zadnjem retku i stupcu.
+Od te vrijednosti se rekonstruira put do pozicije $(0,0)$, čime se određuje poravnanje.
+Tako se primjerice poravnanjem genoma \texttt{CGTAGTCGATGACGT} sa očitanjima 
+\texttt{CGTAT}, 
+\texttt{TATTCG},
+\texttt{TCGATG},
+\texttt{CGATGAC},
+\texttt{GATGACGT}, 
+\texttt{GACGT}
+dobiju sljedeća poravnanja (uz prethodno mapiranje):
+
+\begin{tabular}{ccccccccccccccc }
+    C&G&T&A&G&T&C&G&A&T&G&A&C&G&T\\ \hline
+    C&G&T&A&T&&&&&&&&&&\\
+     & &T&A&T&T&C&G& & & & & & &\\
+     & & & & &T&C&G&A&T&G& & & &\\
+     & & & & & &C&G&A&T&G&A&C& &\\
+     & & & & & & &G&A&T&G&A&C&G&T\\
+     & & & & & & & & & &G&A&C&G&T\\
+\end{tabular}
+
+Većinskim glasanjem se za svaku poziciju određuje vrijednost te će se za dane sekvence dobiti sljedeći genom 
+\texttt{CGTATTCGATGACGT}, koji se od referentnog razlikuje u $5.$ bazi. 
+Vidi se kako je baza iz \texttt{G} prešla u \texttt{T}, zbog čega se zaključuje da je ova mutacija bila supstitucija.
+Prilikom glasanja se također uzima u obzir i broj sekvenci koje su očitane za određenu nuukleotidnu bazu referentnog genoma.
+Ako je taj broj manji od određenog praga koji se postavlja kao dodatni parametar implementacije, mutacije se ne računaju zbog male pouzdanosti.
+
+\chapter{Rezultati}
+Prilikom testiranja opisanog postupka korišteni su $k$-meri veličine $15$, a minimizeri su određeni iz prozra veličine $w=10$.
+Kod poravnanja korištene su vrijednosti $5$ za slaganje, $-4$ za neslaganje te $-8$ za praznine.
+Posljenji parametar je minimalna pokrivenost nakon slaganja sekvenciranih djelova te je on postavljen na $10$.
+
+Opisani postupak je implementiran te je mjeren jaccard index.
+Testiranjem na skupu lambda, postupak je ostvario jaccard index $0.78$,
+te je za to iskorišteno $2.5$GB radne memorije, a izračun je trajao manje od $1$ minute.
+Referentna implementacija na istom primjeru ostvaruje jaccard index $0.45$. 
+
+Testiranjem na skupu ecoli, postupak je ostvario jaccard index $0.74$,
+te je za to iskorišteno $12$GB radne memorije, a izračun je trajao $40$ minuta.
+Referentna implementacija na istom primjeru ostvaruje jaccard index $0.82$.
+
+\bibliography{literatura}
+\bibliographystyle{fer}
+
+\end{document}
