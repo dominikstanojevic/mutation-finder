@@ -50,15 +50,15 @@ struct mapping_result{
     int end;
     int minQ;
     int maxQ;
+    bool reversed;
 
-    mapping_result(int _start, int _end, int _minQ, int _maxQ): 
-    start(_start), end(_end), minQ(_minQ), maxQ(_maxQ) {
+    mapping_result(int _start, int _end, int _minQ, int _maxQ, bool _reversed): 
+    start(_start), end(_end), minQ(_minQ), maxQ(_maxQ), reversed(_reversed) {
 
     }
 
     friend bool operator < (const mapping_result &a, const mapping_result &b){
-        if (a.start != b.start) return a.start < b.start;
-        return a.end < b.end;
+        return (a.end - a.start) < (b.end - b.start);
     }
 };
 

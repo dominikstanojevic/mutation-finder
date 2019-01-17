@@ -14,9 +14,9 @@
 
 using namespace std;
 
-const int MATCH =  1;
-const int DIFF  = -1;
-const int EMPTY = -1;
+const int MATCH =  5;
+const int DIFF  = -4;
+const int EMPTY = -8;
 
 int gotovo = 0;
 
@@ -51,13 +51,36 @@ vector<unordered_map<int, unordered_map<short, int>>> AlignAll(string &reference
                         }
                     }
                 }
-
-                //cout << gotovo++ << endl;
             }
+        }
+
+        #pragma omp critical
+        {
+            cout << gotovo++ << endl;
         }
     }
 
     return mapInfo;
+}
+
+inline char r(char x) {
+    switch (x) {
+        case 'A':
+        case 'a':
+            return 'T';
+        case 'C':
+        case 'c':
+            return 'G';
+        case 'G':
+        case 'g':
+            return 'C';
+        case 'T':
+        case 't':
+            return 'A';
+        default:
+            cout << "Jebem ti život." << endl;
+            exit(-1);
+    }
 }
 
 vector<unordered_map<int, info>> AlignRegion(string &reference, string &query, mapping_result region){
@@ -68,8 +91,16 @@ vector<unordered_map<int, info>> AlignRegion(string &reference, string &query, m
         throw out_of_range("Query region out of range.");
     }
 
-    alignmnent_info result = align(reference, query, region.start, region.end, region.minQ, region.maxQ);
-    return result.infoMap;
+    if(region.reversed) {
+        string q = "";
+        for(int i = query.size() - 1; i >= 0; i--) {
+            q += r(query[i]);
+        }
+
+        return align(reference, q, region.start, region.end, region.minQ, region.maxQ).infoMap;
+    } else {
+        return align(reference, query, region.start, region.end, region.minQ, region.maxQ).infoMap;
+    }
 }
 
 alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, int endQ){
@@ -106,11 +137,7 @@ alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, i
     auto& infoMap = al_info.infoMap;
 
     int pos = startPos + i - 1;
-    while (i > 0 || j > 0){
-        if (arr[i*cols + j] == 0) {
-            break;
-        }
-
+    while (i > 0 || j > 0){ 
         if ((i > 0) && (j > 0) &&
                 (arr[i*cols + j] == (arr[(i-1)*cols + j-1] + ((s[startPos + i-1] == t[startQ + j-1]) ? MATCH : DIFF)))){
             infoMap[0][pos] = info(pos, I_CHA, t[startQ + j - 1]);

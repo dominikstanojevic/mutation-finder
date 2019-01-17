@@ -113,7 +113,7 @@ void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int
 
         int delSize = 0;
         if (a[2].count(i) != 0) {
-            delSize = a[2][i]['0'];
+            delSize = a[2][i][-1];
         }
 
         cout << i << " " << mostFrequentChange.second << " " << mostFrequentIns.second << " " << delSize << endl;

@@ -18,9 +18,14 @@ struct region_data{
     vector<map_data> lis;
     int start;
     int end;
+    bool reversed;
 
-    region_data(vector<map_data> _lis, int _start, int _end): lis(_lis), start(_start), end(_end) {
+    region_data(vector<map_data> _lis, int _start, int _end, bool _reversed): lis(_lis), start(_start), end(_end), reversed(_reversed) {
 
+    }
+
+    friend bool operator<(const region_data &a, const region_data &b) {
+        return (a.end - a.start) < (b.end - b.start);
     }
 };
 
@@ -150,11 +155,11 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
             int start = 0;
             for (int end = 1; end < C.size(); ++end){
                 if (abs(C[end].i - C[end - 1].i) >= GAP){
-                    regions.push_back(region_data(C, start, end));
+                    regions.push_back(region_data(C, start, end, C[end].r == 1 ? true : false));
                     start = end;
                 }
             }
-            regions.push_back(region_data(C, start, C.size()));
+            regions.push_back(region_data(C, start, C.size(), C[start].r == 1 ? true : false));
             b = e + 1;
         }
 
@@ -176,9 +181,13 @@ vector<mapping_result> Map(map<long, set<index_data> > &table, string &q, int w,
                 max = region.lis[region.start].i;
             }
             if (max - min >= MIN_READS) {
-                maps.push_back(mapping_result(min, max + k, minQ, maxQ + k));
+                maps.push_back(mapping_result(min, max + k, minQ, maxQ + k, region.reversed));
             }
         }
     }
+
+    sort(maps.begin(), maps.end());
+    reverse(maps.begin(), maps.end());
+
     return maps;
 }
