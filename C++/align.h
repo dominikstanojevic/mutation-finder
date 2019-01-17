@@ -26,15 +26,14 @@ struct info {
     short option;
     short base;
 
-    info(int _pos, short _option, short _base): 
+    info(int _pos, short _option, short _base):
         pos(_pos),
         option(_option),
         base(_base) {
     }
 
     info(int _pos, short _option, char _base): 
-        pos(_pos),
-        option(_option) {
+       pos(_pos), option(_option) {
 
         switch(_base) {
             case 'a':
@@ -79,8 +78,8 @@ struct alignmnent_info {
     }
 };
 
-vector<unordered_map<int, vector<info>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps);
-vector<unordered_map<int, info>> AlignQuery(string &reference, string &query, vector<mapping_result> &regions);
+vector<unordered_map<int, unordered_map<short, int>>> AlignAll(string &reference, vector<string> &queries, int w, int k, int eps);
+vector<unordered_map<int, info>> AlignRegion(string &reference, string &query, mapping_result region);
 alignmnent_info align(string &s, string &t, int startPos, int end, int startQ, int endQ);
 
 

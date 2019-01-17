@@ -1,29 +1,24 @@
 GCC=        g++
-CFLAGS=		-g -w -O3
+CFLAGS=		-g -w -Ofast -fopenmp -march=native
 PROG=		mutation_finder
 LIBS=		-lm -lz -lpthread
 OBJS=       utils.o sketch.o map.o align.o
 
-all:main.cpp $(OBJS)
+all: main.cpp $(OBJS) align.h map.h sketch.h utils.h
 	$(GCC) $(CFLAGS) main.cpp -o $(PROG) $(OBJS)
 
 clean:
 	rm *.o
 	rm $(PROG)
 
-utils:utils.cpp utils.h
+utils.o :utils.cpp utils.h
 	$(GCC) $(CFLAGS) -c utils.cpp
 
-sketch:sketch.cpp sketch.h
+sketch.o :sketch.cpp sketch.h
 	$(GCC) $(CFLAGS) -c sketch.cpp
 
-map:map.cpp map.h
+map.o :map.cpp map.h
 	$(GCC) $(CFLAGS) -c map.cpp
 
-align:align.cpp align.h
+align.o :align.cpp align.h
 	$(GCC) $(CFLAGS) -c align.cpp
-
-utils.o: utils.h
-sketch.o: sketch.h
-map.o: map.h
-align.o: align.h

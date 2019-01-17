@@ -11,7 +11,7 @@
 using namespace std;
 
 const int MIN_COUNT = 4;
-const int MIN_READS = 1000;
+const int MIN_READS = 100;
 const int GAP = 10000;
 
 struct region_data{

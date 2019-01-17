@@ -58,7 +58,7 @@ inline char ChangeToChar(short x){
     }
 }
 
-pair<short, int> FindMostFrequent(map<short, int> &occChange){
+pair<short, int> FindMostFrequent(unordered_map<short, int> &occChange){
     int counts[] {occChange[I_A], occChange[I_C], occChange[I_G], occChange[I_T]};
 
     vector<short> bases;
@@ -92,7 +92,7 @@ pair<short, int> FindMostFrequent(map<short, int> &occChange){
     return make_pair(bases[rand()%bases.size()], max);
 }
 
-void FindChanges(string &ref, vector<unordered_map<int, vector<info>>> a, 
+void FindChanges(string &ref, vector<unordered_map<int, unordered_map<short, int>>> &a, 
         vector<info> &changes){
     
     for(int i = 0; i < ref.size(); ++i) {
@@ -101,28 +101,22 @@ void FindChanges(string &ref, vector<unordered_map<int, vector<info>>> a,
         if(a[0].count(i) == 0) {
             mostFrequentChange = make_pair(I_NULL, I_NULL);
         } else {
-            map<short, int> occChange;
-            for (auto x : a[0][i]){
-                occChange[x.base]++;
-            }
-            mostFrequentChange = FindMostFrequent(occChange);
+            mostFrequentChange = FindMostFrequent(a[0][i]);
         }
 
         pair<short, int> mostFrequentIns;
         if (a[1].count(i) == 0) {
             mostFrequentIns = make_pair(I_NULL, I_NULL);
         } else {
-            map<short, int> occIns;
-            for (auto x : a[1][i]){
-                occIns[x.base]++;
-            }
-            mostFrequentIns = FindMostFrequent(occIns);
+            mostFrequentIns = FindMostFrequent(a[1][i]);
         }
 
         int delSize = 0;
         if (a[2].count(i) != 0) {
-            delSize = a[2][i].size();
+            delSize = a[2][i]['0'];
         }
+
+        cout << i << " " << mostFrequentChange.second << " " << mostFrequentIns.second << " " << delSize << endl;
 
         if (mostFrequentChange.second <= 0 && mostFrequentIns.second <= 0 && delSize == 0) {
             continue;
