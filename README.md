@@ -1,6 +1,6 @@
 # Mutation Finding With Third Generation Sequencing
 
-This project is part of the (Bioinformatics course)[https://www.fer.unizg.hr/en/course/bio] at the Faculty of Electrical Engineering and Computing, University of Zagreb.
+This project is part of the [Bioinformatics course](https://www.fer.unizg.hr/en/course/bio) at the Faculty of Electrical Engineering and Computing, University of Zagreb.
 
 ## Project setup
 In order to compile the project, clone the repository and position yourself in the `C++` folder. Then simply run the `make` command, which should create `mutation_finder`.
